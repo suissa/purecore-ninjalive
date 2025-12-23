@@ -93,8 +93,30 @@ async function joinRoom() {
       throw new Error('Your browser does not support media devices access or it is blocked by security policies/insecure connection.');
     }
 
-    // Get Media
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    // Get Media with fallback
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    } catch (e) {
+      console.warn('Could not get both video and audio, trying individually...', e);
+      try {
+        // Try audio only
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        videoBtn.classList.add('off');
+        videoBtn.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
+        addSystemMessage('No camera found. Audio only mode.');
+      } catch (ae) {
+        try {
+          // Try video only
+          localStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          audioBtn.classList.add('off');
+          audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+          addSystemMessage('No microphone found. Video only mode.');
+        } catch (ve) {
+          throw new Error('No media devices found (no camera or microphone available).');
+        }
+      }
+    }
+
     localVideo.srcObject = localStream;
 
     // Join
