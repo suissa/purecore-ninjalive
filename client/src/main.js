@@ -1,5 +1,7 @@
 import './style.css';
+import './modal.css';
 import { io } from 'socket.io-client';
+import { loadConfig, saveConfig, applyTheme } from './config.js';
 
 // Config
 const SERVER_URL = window.location.origin;
@@ -51,14 +53,36 @@ let unreadCount = 0;
 let isAdmin = false;
 const adminMuteAllBtn = document.getElementById('admin-mute-all');
 
-// Transcript
+// Transcript & Analysis
 let recognition;
 let transcript = "";
 const downloadTranscriptBtn = document.getElementById('download-transcript');
+const analysisPanel = document.getElementById('analysis-panel');
+const analysisBtn = document.getElementById('analysis-btn');
+const wpmDisplay = document.getElementById('wpm-display');
+const sentimentDisplay = document.getElementById('sentiment-display');
+const anxietyDisplay = document.getElementById('anxiety-display');
+
+// Settings
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsBtn = document.getElementById('close-settings');
+const saveConfigBtn = document.getElementById('save-config-btn');
+const confTitle = document.getElementById('conf-title');
+const confLogo = document.getElementById('conf-logo');
+const confPrimary = document.getElementById('conf-primary');
+const confSecondary = document.getElementById('conf-secondary');
+const confBg = document.getElementById('conf-bg');
+const confFont = document.getElementById('conf-font');
+
+let appConfig = loadConfig();
 
 // Initialize
 function init() {
   userId = 'user-' + Math.random().toString(36).substr(2, 9);
+
+  // Apply initial config
+  applyTheme(appConfig);
 
   joinBtn.addEventListener('click', joinRoom);
 
@@ -87,6 +111,12 @@ function init() {
   // Transcript Handlers
   downloadTranscriptBtn.addEventListener('click', downloadTranscript);
   initTranscription();
+
+  // Analysis & Settings Handlers
+  analysisBtn.addEventListener('click', toggleAnalysis);
+  settingsBtn.addEventListener('click', openSettings);
+  closeSettingsBtn.addEventListener('click', closeSettings);
+  saveConfigBtn.addEventListener('click', saveSettings);
 
   // Check URL for Room ID
   const urlParams = new URLSearchParams(window.location.search);
@@ -160,42 +190,39 @@ function setupSocketListeners() {
       delete peers[disconnectedUserId];
     }
     removeRemoteVideo(disconnectedUserId);
+  });
 
-    socket.on('admin-status', (data) => {
-      isAdmin = data.isAdmin;
-      if (isAdmin) {
-        addSystemMessage('You are the Admin.');
-        adminMuteAllBtn.classList.remove('hidden');
-      }
-    });
+  socket.on('admin-status', (data) => {
+    isAdmin = data.isAdmin;
+    if (isAdmin) {
+      addSystemMessage('You are the Admin.');
+      adminMuteAllBtn.classList.remove('hidden');
+    }
+  });
 
-    socket.on('admin-mute-command', () => {
-      // If we are NOT the admin (admin doesn't mute self usually, or does? User request: "Mute todo mundo". Usually means others.)
-      // Let's assume admin is exempt.
-      if (!isAdmin) {
-        addSystemMessage('Admin muted everyone.');
-        muteAudio();
-      }
-    });
+  socket.on('admin-mute-command', () => {
+    if (!isAdmin) {
+      addSystemMessage('Admin muted everyone.');
+      muteAudio();
+    }
+  });
 
-    socket.on('admin-mute-command-user', (targetId) => {
-      if (targetId === userId) {
-        addSystemMessage('Admin muted you.');
-        muteAudio();
-      }
-    });
+  socket.on('admin-mute-command-user', (targetId) => {
+    if (targetId === userId) {
+      addSystemMessage('Admin muted you.');
+      muteAudio();
+    }
+  });
 
-    socket.on('admin-kick-command', (targetId) => {
-      if (targetId === userId) {
-        alert('You have been kicked by the admin.');
-        leaveCall();
-      }
-    });
-  }
+  socket.on('admin-kick-command', (targetId) => {
+    if (targetId === userId) {
+      alert('You have been kicked by the admin.');
+      leaveCall();
+    }
+  });
 
   socket.on('offer', async (payload) => {
     // payload: { target, caller, sdp, roomId }
-    // If we are not the target (and it was targeted), ignore.
     if (payload.target && payload.target !== userId) return;
 
     console.log('Received offer from:', payload.caller);
@@ -215,13 +242,7 @@ function setupSocketListeners() {
   socket.on('ice-candidate', async (payload) => {
     if (payload.target && payload.target !== userId) return; // Should be targeted usually
 
-    // If senderId is not in payload, we might have trouble in Mesh if we don't know who sent it.
-    // We'll assume the server or client attaches 'caller' or 'sender' to the payload.
-    // Let's assume payload has 'sender' or 'caller'.
-
-    const senderId = payload.caller || payload.sender; // Adjust based on server
-    // Note: The original server code just broadcasted. We need to make sure we know WHO it is from.
-    // We will assume we modify the client to send 'caller' in all signals.
+    const senderId = payload.caller || payload.sender;
 
     if (senderId && peers[senderId]) {
       try {
@@ -239,20 +260,18 @@ function setupSocketListeners() {
       unreadBadge.textContent = unreadCount;
       unreadBadge.classList.remove('hidden');
     }
-  }
   });
 
-socket.on('join-error', (msg) => {
-  alert(msg);
-  // Reset state and show login
-  loginScreen.classList.remove('hidden');
-  callScreen.classList.add('hidden');
-  if (localStream) {
-    localStream.getTracks().forEach(track => track.stop());
-  }
-  // Disconnect socket to avoid state issues
-  socket.disconnect();
-});
+  socket.on('join-error', (msg) => {
+    alert(msg);
+    // Reset state and show login
+    loginScreen.classList.remove('hidden');
+    callScreen.classList.add('hidden');
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+    }
+    socket.disconnect();
+  });
 }
 
 async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
@@ -269,54 +288,48 @@ async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
   // Handle remote tracks
   peer.ontrack = (event) => {
     console.log('Got remote track from:', targetUserId);
-    // Only add once per stream (video/audio come separately but same stream)
-    // or just updating srcObject is fine.
-    // Only add once per stream (video/audio come separately but same stream)
-    // or just updating srcObject is fine.
     addRemoteVideo(event.streams[0], targetUserId);
   };
-};
 
-// ICE Candidates
-peer.onicecandidate = (event) => {
-  if (event.candidate) {
-    socket.emit('ice-candidate', {
-      roomId,
-      target: targetUserId, // Hint for server/receiver
-      caller: userId,       // Important so they know who sent it
-      candidate: event.candidate
-    });
-  }
-};
+  // ICE Candidates
+  peer.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit('ice-candidate', {
+        roomId,
+        target: targetUserId, // Hint for server/receiver
+        caller: userId,       // Important so they know who sent it
+        candidate: event.candidate
+      });
+    }
+  };
 
-if (initiator) {
-  const offer = await peer.createOffer();
-  await peer.setLocalDescription(offer);
-  socket.emit('offer', {
-    roomId,
-    target: targetUserId,
-    caller: userId,
-    sdp: offer
-  });
-} else {
-  // We are answering
-  if (offerSdp) {
-    await peer.setRemoteDescription(new RTCSessionDescription(offerSdp));
-    const answer = await peer.createAnswer();
-    await peer.setLocalDescription(answer);
-    socket.emit('answer', {
+  if (initiator) {
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    socket.emit('offer', {
       roomId,
       target: targetUserId,
       caller: userId,
-      sdp: answer
+      sdp: offer
     });
+  } else {
+    // We are answering
+    if (offerSdp) {
+      await peer.setRemoteDescription(new RTCSessionDescription(offerSdp));
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      socket.emit('answer', {
+        roomId,
+        target: targetUserId,
+        caller: userId,
+        sdp: answer
+      });
+    }
   }
-}
 }
 
 // UI Helpers for Dynamic Video
 function addRemoteVideo(stream, remoteUserId) {
-  // Check if exists
   let videoContainer = document.getElementById(`container-${remoteUserId}`);
 
   if (!videoContainer) {
@@ -336,11 +349,11 @@ function addRemoteVideo(stream, remoteUserId) {
     let adminControls = '';
     if (isAdmin) {
       adminControls = `
-        <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
-           <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
-           <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
-        </div>
-      `;
+            <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
+               <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
+               <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
+            </div>
+          `;
     }
 
     overlay.innerHTML = `<span class="user-badge">User ${remoteUserId.substr(0, 4)}</span>${adminControls}`;
@@ -351,7 +364,6 @@ function addRemoteVideo(stream, remoteUserId) {
 
     remoteStreams[remoteUserId] = stream;
   } else {
-    // Just update stream if needed
     const video = videoContainer.querySelector('video');
     if (video.srcObject !== stream) {
       video.srcObject = stream;
@@ -395,7 +407,6 @@ function toggleVideo() {
 }
 
 async function toggleScreenShare() {
-  // Basic screen share implementation for Mesh is tricky because we need to replace track on ALL peers.
   if (isScreenSharing) {
     // Stop
     const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -441,11 +452,9 @@ async function toggleScreenShare() {
 }
 
 function toggleRecording() {
-  // Recording Mesh is harder. We will just record the first remote stream we find for now, or alert that it's limited.
   const remoteKeys = Object.keys(remoteStreams);
   if (remoteKeys.length === 0) return alert('No one to record.');
 
-  // Ideally we mix streams, but for MVP we record one.
   const targetStream = remoteStreams[remoteKeys[0]];
 
   if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -509,6 +518,7 @@ function sendMessage() {
   if (socket) {
     socket.emit('chat-message', { roomId, message: msg });
     addMessage(msg, 'mine');
+    analyzeSpeech(msg); // Self analysis
     chatInput.value = '';
   }
 }
@@ -541,7 +551,7 @@ function initTranscription() {
     recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
-    recognition.lang = 'pt-BR'; // Default to PT-BR based on user language
+    recognition.lang = 'pt-BR'; // Default to PT-BR
 
     recognition.onresult = (event) => {
       let finalTrans = '';
@@ -554,7 +564,9 @@ function initTranscription() {
         const timestamp = new Date().toLocaleTimeString();
         const line = `[${timestamp}] Me: ${finalTrans}\n`;
         transcript += line;
-        // Save
+
+        analyzeSpeech(finalTrans); // Live Analysis
+
         localStorage.setItem(`transcript-${roomId}`, transcript);
         console.log('Transcript:', line);
       }
@@ -565,7 +577,6 @@ function initTranscription() {
     };
 
     recognition.onend = () => {
-      // Auto restart if call is active
       if (peerConnection || Object.keys(peers).length > 0) {
         try { recognition.start(); } catch (e) { }
       }
@@ -593,7 +604,91 @@ function downloadTranscript() {
   }, 100);
 }
 
-// Global helpers for inline HTML onclicks
+// Analysis Logic
+let analysisHistory = {
+  words: 0,
+  startTime: Date.now()
+};
+
+function analyzeSpeech(text) {
+  // 1. WPM
+  const words = text.split(' ').length;
+  analysisHistory.words += words;
+  const minutes = (Date.now() - analysisHistory.startTime) / 60000;
+  const wpm = minutes > 0 ? Math.round(analysisHistory.words / minutes) : 0;
+
+  // 2. Anxiety (Heuristic: > 150 WPM normal conversation is high)
+  const anxietyLevel = wpm > 160 ? 'High' : (wpm > 130 ? 'Medium' : 'Low');
+  const anxietyColor = wpm > 160 ? 'var(--danger)' : (wpm > 130 ? 'var(--accent-color)' : 'var(--success)');
+
+  // 3. Sentiment (Simple Keywords)
+  const negativeWords = ['worried', 'bad', 'scared', 'angry', 'hate', 'problem', 'fail', 'medo', 'ruim', 'raiva', 'problema'];
+  const positiveWords = ['good', 'happy', 'great', 'love', 'success', 'bom', 'feliz', 'amor', 'sucesso'];
+
+  let score = 0;
+  text.toLowerCase().split(' ').forEach(w => {
+    if (negativeWords.includes(w)) score--;
+    if (positiveWords.includes(w)) score++;
+  });
+
+  let sentiment = 'Neutral';
+  if (score > 0) sentiment = 'Positive';
+  if (score < 0) sentiment = 'Negative';
+
+  // Update UI
+  wpmDisplay.textContent = wpm;
+  sentimentDisplay.textContent = sentiment;
+  anxietyDisplay.textContent = anxietyLevel;
+  anxietyDisplay.style.color = anxietyColor;
+}
+
+function toggleAnalysis() {
+  if (analysisPanel.classList.contains('hidden')) {
+    analysisPanel.classList.remove('hidden');
+  } else {
+    analysisPanel.classList.add('hidden');
+  }
+}
+
+// Settings Logic
+function openSettings() {
+  // Populate
+  confTitle.value = appConfig.branding.title;
+  confLogo.value = appConfig.branding.logoUrl;
+  confPrimary.value = appConfig.theme.primaryColor;
+  confSecondary.value = appConfig.theme.secondaryColor;
+  confBg.value = appConfig.theme.backgroundColor;
+  confFont.value = appConfig.theme.fontFamily;
+
+  settingsModal.classList.remove('hidden');
+}
+
+function closeSettings() {
+  settingsModal.classList.add('hidden');
+}
+
+function saveSettings() {
+  const newConfig = {
+    theme: {
+      primaryColor: confPrimary.value,
+      secondaryColor: confSecondary.value,
+      backgroundColor: confBg.value,
+      fontFamily: confFont.value
+    },
+    branding: {
+      title: confTitle.value,
+      logoUrl: confLogo.value
+    },
+    analysis: { enabled: true }
+  };
+
+  appConfig = newConfig;
+  saveConfig(newConfig);
+  closeSettings();
+  alert('Settings saved!');
+}
+
+// Global helpers
 window.emitMute = (targetId) => {
   if (confirm('Mute this user?')) socket.emit('admin-mute-user', targetId);
 };
