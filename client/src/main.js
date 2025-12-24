@@ -77,10 +77,18 @@ function init() {
 }
 
 async function joinRoom() {
-  const room = roomInput.value.trim();
-  if (!room) return alert('Please enter a room name');
+  const roomBase = roomInput.value.trim();
+  if (!roomBase) return alert('Please enter a room name');
 
-  roomId = room;
+  // Check if we already have a room with timestamp in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlRoom = urlParams.get('room');
+
+  if (urlRoom && (urlRoom === roomBase || urlRoom.startsWith(roomBase + '-'))) {
+    roomId = urlRoom;
+  } else {
+    roomId = `${roomBase}-${Date.now()}`;
+  }
 
   // UI Transition
   loginScreen.classList.add('hidden');
@@ -382,7 +390,12 @@ function addMessage(text, type) {
   div.classList.add('message', type);
   div.textContent = text;
   chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Smooth scroll to bottom
+  chatMessages.scrollTo({
+    top: chatMessages.scrollHeight,
+    behavior: 'smooth'
+  });
 }
 
 function addSystemMessage(text) {

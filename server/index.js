@@ -68,6 +68,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 2000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Signaling server running on port ${PORT}`);
+  console.log(`Network access enabled. Host IP: ${require('os').networkInterfaces().eth0?.[0]?.address || 'unknown'}`);
 });
