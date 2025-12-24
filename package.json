@@ -6,5 +6,9 @@
     "build:client": "npm run build --prefix client",
     "postinstall": "npm run install:all && npm run build:client",
     "start": "node server/index.js"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "^13.2.2",
+    "body-parser": "^2.2.1"
   }
 }
