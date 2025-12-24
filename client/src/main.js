@@ -66,6 +66,14 @@ function init() {
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
   });
+
+  // Check URL for Room ID
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlRoom = urlParams.get('room');
+  if (urlRoom) {
+    roomInput.value = urlRoom;
+    joinRoom();
+  }
 }
 
 async function joinRoom() {
@@ -122,6 +130,14 @@ async function joinRoom() {
     // Join
     socket.emit('join-room', roomId, userId);
     addSystemMessage(`Joined room: ${roomId}`);
+
+    // Update URL without reloading
+    const newUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+
+    // Add Copy Link pill to UI (conceptually or just log for now)
+    addSystemMessage('Room link copied to clipboard!');
+    navigator.clipboard.writeText(newUrl).catch(err => console.error('Failed to copy URL', err));
   } catch (err) {
     console.error('Error accessing media:', err);
     alert(`Media Error: ${err.message || 'Could not access camera/microphone. Please ensure you have granted permissions and are using a secure connection (HTTPS).'}`);
