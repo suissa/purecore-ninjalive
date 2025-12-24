@@ -26,6 +26,16 @@
             <i class="fa-solid fa-hashtag"></i>
             <input type="text" id="room-input" placeholder="Enter Room Name" />
           </div>
+
+          <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="room-password" placeholder="Password (Optional)" />
+          </div>
+
+          <div class="input-group">
+            <i class="fa-solid fa-users"></i>
+            <input type="number" id="room-limit" placeholder="Max Users (Default 5)" min="2" max="20" value="5" />
+          </div>
           
           <button id="join-btn" class="primary-btn">
             Join Call <i class="fa-solid fa-arrow-right"></i>
@@ -47,17 +57,7 @@
               </div>
             </div>
 
-            <!-- Remote Video -->
-            <div class="video-container remote">
-              <video id="remote-video" autoplay playsinline></video>
-              <div id="remote-placeholder" class="placeholder">
-                <div class="loader"></div>
-                <p>Waiting for current peer...</p>
-              </div>
-              <div class="video-overlay matching-hidden">
-                <span class="user-badge">Remote</span>
-              </div>
-            </div>
+            <!-- Remote Videos will be added here dynamically -->
           </div>
         </div>
 

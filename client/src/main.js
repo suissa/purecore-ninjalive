@@ -13,10 +13,11 @@ const ICE_SERVERS = {
 // DOM Elements
 const loginScreen = document.getElementById('login-screen');
 const callScreen = document.getElementById('call-screen');
+const videoGrid = document.querySelector('.video-grid');
 const localVideo = document.getElementById('local-video');
-const remoteVideo = document.getElementById('remote-video');
-const remotePlaceholder = document.getElementById('remote-placeholder');
 const roomInput = document.getElementById('room-input');
+const roomPassword = document.getElementById('room-password');
+const roomLimit = document.getElementById('room-limit');
 const joinBtn = document.getElementById('join-btn');
 const chatPanel = document.getElementById('chat-panel');
 const chatToggleBtn = document.getElementById('chat-toggle-btn');
@@ -36,8 +37,8 @@ const leaveBtn = document.getElementById('leave-btn');
 // State
 let socket;
 let localStream;
-let remoteStream;
-let peerConnection;
+const peers = {}; // userId -> RTCPeerConnection
+const remoteStreams = {}; // userId -> MediaStream
 let roomId;
 let userId;
 let isScreenSharing = false;
@@ -80,7 +81,6 @@ async function joinRoom() {
   const roomBase = roomInput.value.trim();
   if (!roomBase) return alert('Please enter a room name');
 
-  // Check if we already have a room with timestamp in the URL
   const urlParams = new URLSearchParams(window.location.search);
   const urlRoom = urlParams.get('room');
 
@@ -100,99 +100,83 @@ async function joinRoom() {
   setupSocketListeners();
 
   try {
-    // Check for Secure Context (Required for camera/mic on non-localhost)
-    if (!window.isSecureContext && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      throw new Error('This app requires a Secure Context (HTTPS or localhost) to access your camera and microphone. Browsers block media access on insecure HTTP connections.');
-    }
-
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('Your browser does not support media devices access or it is blocked by security policies/insecure connection.');
+      throw new Error('Media API not supported');
     }
 
-    // Get Media with fallback
-    try {
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    } catch (e) {
-      console.warn('Could not get both video and audio, trying individually...', e);
-      try {
-        // Try audio only
-        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        videoBtn.classList.add('off');
-        videoBtn.innerHTML = '<i class="fa-solid fa-video-slash"></i>';
-        addSystemMessage('No camera found. Audio only mode.');
-      } catch (ae) {
-        try {
-          // Try video only
-          localStream = await navigator.mediaDevices.getUserMedia({ video: true });
-          audioBtn.classList.add('off');
-          audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
-          addSystemMessage('No microphone found. Video only mode.');
-        } catch (ve) {
-          throw new Error('No media devices found (no camera or microphone available).');
-        }
-      }
-    }
-
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     localVideo.srcObject = localStream;
 
-    // Join
-    socket.emit('join-room', roomId, userId);
+    // Join with settings
+    socket.emit('join-room', {
+      roomId,
+      userId,
+      password: roomPassword.value.trim(),
+      limit: roomLimit.value
+    });
     addSystemMessage(`Joined room: ${roomId}`);
 
-    // Update URL without reloading
     const newUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
     window.history.pushState({ path: newUrl }, '', newUrl);
 
-    // Add Copy Link pill to UI (conceptually or just log for now)
-    addSystemMessage('Room link copied to clipboard!');
-    navigator.clipboard.writeText(newUrl).catch(err => console.error('Failed to copy URL', err));
   } catch (err) {
     console.error('Error accessing media:', err);
-    alert(`Media Error: ${err.message || 'Could not access camera/microphone. Please ensure you have granted permissions and are using a secure connection (HTTPS).'}`);
+    alert('Could not access camera/mic. Ensure HTTPS/localhost.');
   }
 }
 
 function setupSocketListeners() {
-  socket.on('user-connected', async (newUserId) => {
+  socket.on('user-connected', (newUserId) => {
     console.log('User connected:', newUserId);
-    addSystemMessage('User connected');
-    createPeerConnection(newUserId, true); // true = initiator
+    addSystemMessage(`User ${newUserId.substr(0, 4)} joined`);
+    connectToNewUser(newUserId, true); // true = initiator
   });
 
-  socket.on('user-disconnected', (id) => {
-    console.log('User disconnected:', id);
-    addSystemMessage('User disconnected');
-    if (peerConnection) {
-      peerConnection.close();
-      peerConnection = null;
+  socket.on('user-disconnected', (disconnectedUserId) => {
+    console.log('User disconnected:', disconnectedUserId);
+    addSystemMessage(`User ${disconnectedUserId.substr(0, 4)} left`);
+    if (peers[disconnectedUserId]) {
+      peers[disconnectedUserId].close();
+      delete peers[disconnectedUserId];
     }
-    remoteVideo.srcObject = null;
-    remotePlaceholder.classList.remove('hidden');
+    removeRemoteVideo(disconnectedUserId);
   });
 
   socket.on('offer', async (payload) => {
-    if (!peerConnection) createPeerConnection(payload.caller, false);
+    // payload: { target, caller, sdp, roomId }
+    // If we are not the target (and it was targeted), ignore.
+    if (payload.target && payload.target !== userId) return;
 
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    socket.emit('answer', {
-      ...payload,
-      sdp: answer
-    });
+    console.log('Received offer from:', payload.caller);
+    await connectToNewUser(payload.caller, false, payload.sdp);
   });
 
   socket.on('answer', async (payload) => {
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+    if (payload.target && payload.target !== userId) return;
+    console.log('Received answer from:', payload.caller);
+
+    const peer = peers[payload.caller];
+    if (peer) {
+      await peer.setRemoteDescription(new RTCSessionDescription(payload.sdp));
+    }
   });
 
   socket.on('ice-candidate', async (payload) => {
-    if (peerConnection) {
+    if (payload.target && payload.target !== userId) return; // Should be targeted usually
+
+    // If senderId is not in payload, we might have trouble in Mesh if we don't know who sent it.
+    // We'll assume the server or client attaches 'caller' or 'sender' to the payload.
+    // Let's assume payload has 'sender' or 'caller'.
+
+    const senderId = payload.caller || payload.sender; // Adjust based on server
+    // Note: The original server code just broadcasted. We need to make sure we know WHO it is from.
+    // We will assume we modify the client to send 'caller' in all signals.
+
+    if (senderId && peers[senderId]) {
       try {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(payload.candidate));
+        await peers[senderId].addIceCandidate(new RTCIceCandidate(payload.candidate));
       } catch (e) {
-        console.error('Error adding received ice candidate', e);
+        console.error('Error adding ICE candidate', e);
       }
     }
   });
@@ -204,50 +188,116 @@ function setupSocketListeners() {
       unreadBadge.textContent = unreadCount;
       unreadBadge.classList.remove('hidden');
     }
+  }
   });
+
+socket.on('join-error', (msg) => {
+  alert(msg);
+  // Reset state and show login
+  loginScreen.classList.remove('hidden');
+  callScreen.classList.add('hidden');
+  if (localStream) {
+    localStream.getTracks().forEach(track => track.stop());
+  }
+  // Disconnect socket to avoid state issues
+  socket.disconnect();
+});
 }
 
-function createPeerConnection(targetUserId, initiator) {
-  peerConnection = new RTCPeerConnection(ICE_SERVERS);
+async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
+  if (peers[targetUserId]) return; // Already connected
+
+  const peer = new RTCPeerConnection(ICE_SERVERS);
+  peers[targetUserId] = peer;
 
   // Add local tracks
   localStream.getTracks().forEach(track => {
-    peerConnection.addTrack(track, localStream);
+    peer.addTrack(track, localStream);
   });
 
-  // Handle remote stream
-  peerConnection.ontrack = (event) => {
-    console.log('Got remote track');
-    remoteVideo.srcObject = event.streams[0];
-    remoteStream = event.streams[0];
-    remotePlaceholder.classList.add('hidden');
+  // Handle remote tracks
+  peer.ontrack = (event) => {
+    console.log('Got remote track from:', targetUserId);
+    // Only add once per stream (video/audio come separately but same stream)
+    // or just updating srcObject is fine.
+    addRemoteVideo(event.streams[0], targetUserId);
   };
 
-  // Handle ICE Candidates
-  peerConnection.onicecandidate = (event) => {
+  // ICE Candidates
+  peer.onicecandidate = (event) => {
     if (event.candidate) {
       socket.emit('ice-candidate', {
         roomId,
+        target: targetUserId, // Hint for server/receiver
+        caller: userId,       // Important so they know who sent it
         candidate: event.candidate
       });
     }
   };
 
   if (initiator) {
-    createOffer(targetUserId);
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    socket.emit('offer', {
+      roomId,
+      target: targetUserId,
+      caller: userId,
+      sdp: offer
+    });
+  } else {
+    // We are answering
+    if (offerSdp) {
+      await peer.setRemoteDescription(new RTCSessionDescription(offerSdp));
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      socket.emit('answer', {
+        roomId,
+        target: targetUserId,
+        caller: userId,
+        sdp: answer
+      });
+    }
   }
 }
 
-async function createOffer(targetUserId) {
-  const offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
+// UI Helpers for Dynamic Video
+function addRemoteVideo(stream, remoteUserId) {
+  // Check if exists
+  let videoContainer = document.getElementById(`container-${remoteUserId}`);
 
-  socket.emit('offer', {
-    roomId,
-    target: targetUserId,
-    caller: userId,
-    sdp: offer
-  });
+  if (!videoContainer) {
+    videoContainer = document.createElement('div');
+    videoContainer.id = `container-${remoteUserId}`;
+    videoContainer.className = 'video-container remote';
+
+    const video = document.createElement('video');
+    video.id = `video-${remoteUserId}`;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.srcObject = stream;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'video-overlay';
+    overlay.innerHTML = `<span class="user-badge">User ${remoteUserId.substr(0, 4)}</span>`;
+
+    videoContainer.appendChild(video);
+    videoContainer.appendChild(overlay);
+    videoGrid.appendChild(videoContainer);
+
+    remoteStreams[remoteUserId] = stream;
+  } else {
+    // Just update stream if needed
+    const video = videoContainer.querySelector('video');
+    if (video.srcObject !== stream) {
+      video.srcObject = stream;
+    }
+  }
+}
+
+function removeRemoteVideo(remoteUserId) {
+  const el = document.getElementById(`container-${remoteUserId}`);
+  if (el) el.remove();
+  delete remoteStreams[remoteUserId];
 }
 
 // Controls
@@ -280,38 +330,45 @@ function toggleVideo() {
 }
 
 async function toggleScreenShare() {
+  // Basic screen share implementation for Mesh is tricky because we need to replace track on ALL peers.
   if (isScreenSharing) {
-    // Stop sharing
+    // Stop
     const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
     const videoTrack = camStream.getVideoTracks()[0];
 
-    const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
-    if (sender) sender.replaceTrack(videoTrack);
-
     localVideo.srcObject = camStream;
-    // Update localStream ref for subsequent toggles
     localStream.removeTrack(localStream.getVideoTracks()[0]);
     localStream.addTrack(videoTrack);
+
+    // Update all peers
+    for (const pid in peers) {
+      const sender = peers[pid].getSenders().find(s => s.track.kind === 'video');
+      if (sender) sender.replaceTrack(videoTrack);
+    }
 
     screenBtn.classList.remove('active');
     isScreenSharing = false;
   } else {
-    // Start sharing
+    // Start
     try {
       const screenStream = await navigator.mediaDevices.getDisplayMedia({ cursor: true });
       const screenTrack = screenStream.getVideoTracks()[0];
 
-      const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
-      if (sender) sender.replaceTrack(screenTrack);
-
       localVideo.srcObject = screenStream;
 
       screenTrack.onended = () => {
-        if (isScreenSharing) toggleScreenShare(); // Handle native stop button
+        if (isScreenSharing) toggleScreenShare();
       };
 
-      screenBtn.classList.add('active'); // active logic visual
+      // Update all peers
+      for (const pid in peers) {
+        const sender = peers[pid].getSenders().find(s => s.track.kind === 'video');
+        if (sender) sender.replaceTrack(screenTrack);
+      }
+
+      screenBtn.classList.add('active');
       isScreenSharing = true;
+
     } catch (err) {
       console.error('Error sharing screen:', err);
     }
@@ -319,16 +376,19 @@ async function toggleScreenShare() {
 }
 
 function toggleRecording() {
+  // Recording Mesh is harder. We will just record the first remote stream we find for now, or alert that it's limited.
+  const remoteKeys = Object.keys(remoteStreams);
+  if (remoteKeys.length === 0) return alert('No one to record.');
+
+  // Ideally we mix streams, but for MVP we record one.
+  const targetStream = remoteStreams[remoteKeys[0]];
+
   if (mediaRecorder && mediaRecorder.state === 'recording') {
     mediaRecorder.stop();
     recordBtn.classList.remove('recording-active');
   } else {
-    if (!remoteStream) return alert('No active call to record.');
-
     recordedChunks = [];
-    // Record combined stream? Or just remote. Usually just remote for meetings.
-    // If we want both, we need to mix canvas. Simple: Record remote.
-    mediaRecorder = new MediaRecorder(remoteStream);
+    mediaRecorder = new MediaRecorder(targetStream);
 
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) recordedChunks.push(e.data);
@@ -352,13 +412,16 @@ function toggleRecording() {
 
     mediaRecorder.start();
     recordBtn.classList.add('recording-active');
-    addSystemMessage('Recording started...');
+    addSystemMessage('Recording started (Single Stream)...');
   }
 }
 
 function leaveCall() {
   if (socket) socket.disconnect();
-  if (peerConnection) peerConnection.close();
+  // Close all peers
+  for (const pid in peers) {
+    peers[pid].close();
+  }
   location.reload();
 }
 
@@ -391,7 +454,6 @@ function addMessage(text, type) {
   div.textContent = text;
   chatMessages.appendChild(div);
 
-  // Smooth scroll to bottom
   chatMessages.scrollTo({
     top: chatMessages.scrollHeight,
     behavior: 'smooth'
@@ -399,10 +461,7 @@ function addMessage(text, type) {
 }
 
 function addSystemMessage(text) {
-  // Optional: show toast or simplified message in chat
-  // For now log
   console.log('System:', text);
-  // Also add to chat as system?
   const div = document.createElement('div');
   div.style.alignSelf = 'center';
   div.style.color = '#94a3b8';
