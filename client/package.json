@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/dom-speech-recognition": "^0.0.7",
     "vite": "^7.2.4"
   },
   "dependencies": {

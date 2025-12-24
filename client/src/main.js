@@ -47,6 +47,15 @@ let recordedChunks = [];
 let isChatOpen = false;
 let unreadCount = 0;
 
+// Admin
+let isAdmin = false;
+const adminMuteAllBtn = document.getElementById('admin-mute-all');
+
+// Transcript
+let recognition;
+let transcript = "";
+const downloadTranscriptBtn = document.getElementById('download-transcript');
+
 // Initialize
 function init() {
   userId = 'user-' + Math.random().toString(36).substr(2, 9);
@@ -67,6 +76,17 @@ function init() {
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
   });
+
+  // Admin Handlers
+  adminMuteAllBtn.addEventListener('click', () => {
+    if (confirm('Mute everyone else?')) {
+      socket.emit('admin-mute-all');
+    }
+  });
+
+  // Transcript Handlers
+  downloadTranscriptBtn.addEventListener('click', downloadTranscript);
+  initTranscription();
 
   // Check URL for Room ID
   const urlParams = new URLSearchParams(window.location.search);
@@ -140,7 +160,38 @@ function setupSocketListeners() {
       delete peers[disconnectedUserId];
     }
     removeRemoteVideo(disconnectedUserId);
-  });
+
+    socket.on('admin-status', (data) => {
+      isAdmin = data.isAdmin;
+      if (isAdmin) {
+        addSystemMessage('You are the Admin.');
+        adminMuteAllBtn.classList.remove('hidden');
+      }
+    });
+
+    socket.on('admin-mute-command', () => {
+      // If we are NOT the admin (admin doesn't mute self usually, or does? User request: "Mute todo mundo". Usually means others.)
+      // Let's assume admin is exempt.
+      if (!isAdmin) {
+        addSystemMessage('Admin muted everyone.');
+        muteAudio();
+      }
+    });
+
+    socket.on('admin-mute-command-user', (targetId) => {
+      if (targetId === userId) {
+        addSystemMessage('Admin muted you.');
+        muteAudio();
+      }
+    });
+
+    socket.on('admin-kick-command', (targetId) => {
+      if (targetId === userId) {
+        alert('You have been kicked by the admin.');
+        leaveCall();
+      }
+    });
+  }
 
   socket.on('offer', async (payload) => {
     // payload: { target, caller, sdp, roomId }
@@ -220,44 +271,47 @@ async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
     console.log('Got remote track from:', targetUserId);
     // Only add once per stream (video/audio come separately but same stream)
     // or just updating srcObject is fine.
+    // Only add once per stream (video/audio come separately but same stream)
+    // or just updating srcObject is fine.
     addRemoteVideo(event.streams[0], targetUserId);
   };
+};
 
-  // ICE Candidates
-  peer.onicecandidate = (event) => {
-    if (event.candidate) {
-      socket.emit('ice-candidate', {
-        roomId,
-        target: targetUserId, // Hint for server/receiver
-        caller: userId,       // Important so they know who sent it
-        candidate: event.candidate
-      });
-    }
-  };
+// ICE Candidates
+peer.onicecandidate = (event) => {
+  if (event.candidate) {
+    socket.emit('ice-candidate', {
+      roomId,
+      target: targetUserId, // Hint for server/receiver
+      caller: userId,       // Important so they know who sent it
+      candidate: event.candidate
+    });
+  }
+};
 
-  if (initiator) {
-    const offer = await peer.createOffer();
-    await peer.setLocalDescription(offer);
-    socket.emit('offer', {
+if (initiator) {
+  const offer = await peer.createOffer();
+  await peer.setLocalDescription(offer);
+  socket.emit('offer', {
+    roomId,
+    target: targetUserId,
+    caller: userId,
+    sdp: offer
+  });
+} else {
+  // We are answering
+  if (offerSdp) {
+    await peer.setRemoteDescription(new RTCSessionDescription(offerSdp));
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+    socket.emit('answer', {
       roomId,
       target: targetUserId,
       caller: userId,
-      sdp: offer
+      sdp: answer
     });
-  } else {
-    // We are answering
-    if (offerSdp) {
-      await peer.setRemoteDescription(new RTCSessionDescription(offerSdp));
-      const answer = await peer.createAnswer();
-      await peer.setLocalDescription(answer);
-      socket.emit('answer', {
-        roomId,
-        target: targetUserId,
-        caller: userId,
-        sdp: answer
-      });
-    }
   }
+}
 }
 
 // UI Helpers for Dynamic Video
@@ -278,7 +332,18 @@ function addRemoteVideo(stream, remoteUserId) {
 
     const overlay = document.createElement('div');
     overlay.className = 'video-overlay';
-    overlay.innerHTML = `<span class="user-badge">User ${remoteUserId.substr(0, 4)}</span>`;
+
+    let adminControls = '';
+    if (isAdmin) {
+      adminControls = `
+        <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
+           <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
+           <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
+        </div>
+      `;
+    }
+
+    overlay.innerHTML = `<span class="user-badge">User ${remoteUserId.substr(0, 4)}</span>${adminControls}`;
 
     videoContainer.appendChild(video);
     videoContainer.appendChild(overlay);
@@ -468,6 +533,83 @@ function addSystemMessage(text) {
   div.style.fontSize = '0.8rem';
   div.textContent = text;
   chatMessages.appendChild(div);
+}
+
+// Transcription
+function initTranscription() {
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'pt-BR'; // Default to PT-BR based on user language
+
+    recognition.onresult = (event) => {
+      let finalTrans = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTrans += event.results[i][0].transcript + ' ';
+        }
+      }
+      if (finalTrans) {
+        const timestamp = new Date().toLocaleTimeString();
+        const line = `[${timestamp}] Me: ${finalTrans}\n`;
+        transcript += line;
+        // Save
+        localStorage.setItem(`transcript-${roomId}`, transcript);
+        console.log('Transcript:', line);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.warn('Speech recognition error', event.error);
+    };
+
+    recognition.onend = () => {
+      // Auto restart if call is active
+      if (peerConnection || Object.keys(peers).length > 0) {
+        try { recognition.start(); } catch (e) { }
+      }
+    };
+
+    recognition.start();
+  } else {
+    console.warn('Speech Recognition API not supported.');
+    downloadTranscriptBtn.style.display = 'none';
+  }
+}
+
+function downloadTranscript() {
+  if (!transcript) return alert('No transcript available yet.');
+  const blob = new Blob([transcript], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `transcript-${roomId}-${Date.now()}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }, 100);
+}
+
+// Global helpers for inline HTML onclicks
+window.emitMute = (targetId) => {
+  if (confirm('Mute this user?')) socket.emit('admin-mute-user', targetId);
+};
+window.emitKick = (targetId) => {
+  if (confirm('Kick this user?')) socket.emit('admin-kick-user', targetId);
+};
+
+function muteAudio() {
+  if (localStream) {
+    const audioTrack = localStream.getAudioTracks()[0];
+    if (audioTrack && audioTrack.enabled) {
+      audioTrack.enabled = false;
+      audioBtn.classList.add('off');
+      audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+    }
+  }
 }
 
 // Start
