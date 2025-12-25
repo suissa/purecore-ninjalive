@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ninja Meeting - Maximum Privacy Video Calls</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Innovative Navigation -->
+    <nav class="navbar" data-aos="fade-down">
+      <div class="logo">
+        <img src="logo.png" alt="Ninja Meeting Logo" class="nav-logo" />
+        <span>Ninja Meeting</span>
+      </div>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#security">Security</a>
+        <a href="#comparison">Comparison</a>
+      </div>
+      <a href="http://localhost:5173" class="btn-nav">Launch App</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+      <div class="hero-content" data-aos="fade-up">
+        <div class="badge-new">Version 2.0 Available</div>
+        <h1>Invisible.<br>Secure.<br>Limitless.</h1>
+        <p>The first P2P Video Call System that respects your privacy. No servers recorded your data. No sign-ups needed.</p>
+        <div class="hero-btns">
+          <a href="http://localhost:5173" class="btn-primary">
+            <i class="fa-solid fa-rocket"></i> Start Instant Meeting
+          </a>
+          <a href="#features" class="btn-secondary">Learn More</a>
+        </div>
+      </div>
+      <div class="hero-visual" data-aos="fade-left">
+        <div class="blob-hero"></div>
+        <img src="logo.png" alt="Ninja Mascot" class="mascot-float" />
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+      <div class="section-header" data-aos="fade-up">
+        <h2>Why Ninja Meeting?</h2>
+        <p class="subtitle">Designed for the privacy-conscious.</p>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="icon-box"><i class="fa-solid fa-user-secret"></i></div>
+          <h3>Total Anonymity</h3>
+          <p>No account required. Just pick a name and join. Your identity remains yours.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="icon-box"><i class="fa-solid fa-server"></i></div>
+          <h3>Serverless Media</h3>
+          <p>We use P2P Mesh technology. Video and audio go directly between you and your peers. We don't see it.</p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3>Military Encryption</h3>
+          <p>Powered by WebRTC standard encryption (DTLS/SRTP). Secure by default.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison Section -->
+    <section id="comparison" class="comparison-section">
+      <div class="container" data-aos="fade-up">
+        <h2>Dare to Compare</h2>
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th class="ninja-col">Ninja Meeting</th>
+                <th>Zoom / GMeet</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Data Storage</td>
+                <td class="highlight">Zero (P2P) 🟢</td>
+                <td>Cloud Servers 🔴</td>
+              </tr>
+              <tr>
+                <td>Login Required</td>
+                <td class="highlight">Never 🟢</td>
+                <td>Always 🔴</td>
+              </tr>
+              <tr>
+                <td>Cost</td>
+                <td class="highlight">Free & Open Source 🟢</td>
+                <td>Freemium / Paid 🟡</td>
+              </tr>
+              <tr>
+                <td>Encryption</td>
+                <td class="highlight">End-to-End (Direct) 🟢</td>
+                <td>Server-Decrypted (Often) 🟡</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" data-aos="zoom-in">
+      <h2>Ready to go dark?</h2>
+      <p>Start a secure meeting in seconds.</p>
+      <a href="http://localhost:5173" class="btn-primary large">
+        Launch Ninja Meeting
+      </a>
+    </section>
+
+    <footer>
+      <p>&copy; 2024 Ninja Meeting. Open Source Project.</p>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

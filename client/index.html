@@ -26,6 +26,16 @@
             <i class="fa-solid fa-hashtag"></i>
             <input type="text" id="room-input" placeholder="Enter Room Name" />
           </div>
+
+          <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="room-password" placeholder="Password (Optional)" />
+          </div>
+
+          <div class="input-group">
+            <i class="fa-solid fa-users"></i>
+            <input type="number" id="room-limit" placeholder="Max Users (Default 5)" min="2" max="20" value="5" />
+          </div>
           
           <button id="join-btn" class="primary-btn">
             Join Call <i class="fa-solid fa-arrow-right"></i>
@@ -47,17 +57,7 @@
               </div>
             </div>
 
-            <!-- Remote Video -->
-            <div class="video-container remote">
-              <video id="remote-video" autoplay playsinline></video>
-              <div id="remote-placeholder" class="placeholder">
-                <div class="loader"></div>
-                <p>Waiting for current peer...</p>
-              </div>
-              <div class="video-overlay matching-hidden">
-                <span class="user-badge">Remote</span>
-              </div>
-            </div>
+            <!-- Remote Videos will be added here dynamically -->
           </div>
         </div>
 
@@ -81,6 +81,20 @@
             <span id="unread-badge" class="badge hidden"></span>
           </button>
           <div class="divider"></div>
+          <button id="settings-btn" class="control-btn" title="Settings">
+            <i class="fa-solid fa-gear"></i>
+          </button>
+          <button id="analysis-btn" class="control-btn" title="Behavioral Analysis">
+            <i class="fa-solid fa-chart-pie"></i>
+          </button>
+          <div class="divider"></div>
+          <button id="admin-mute-all" class="control-btn hidden" title="Admin: Mute All">
+            <i class="fa-solid fa-volume-xmark"></i>
+            <span class="badge" style="background:var(--primary-color);">A</span>
+          </button>
+          <button id="download-transcript" class="control-btn" title="Download Transcript">
+            <i class="fa-solid fa-file-lines"></i>
+          </button>
           <button id="leave-btn" class="control-btn hangup" title="Leave Call">
             <i class="fa-solid fa-phone-slash"></i>
           </button>
@@ -104,8 +118,66 @@
           </div>
         </div>
 
+        <!-- Analysis Panel -->
+        <div id="analysis-panel" class="glass-panel hidden" style="left: 20px; top: 20px; bottom: initial; width: 300px; padding: 1rem; right: initial;">
+            <div class="chat-header" style="padding: 0 0 1rem 0;">
+                <h3><i class="fa-solid fa-brain"></i> Live Analysis</h3>
+            </div>
+            <div id="analysis-content" style="font-size: 0.9rem; color: var(--text-muted);">
+                <div style="margin-bottom: 10px;">
+                    <strong>Speech Rate:</strong> <span id="wpm-display">0</span> WPM
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>Sentiment:</strong> <span id="sentiment-display">Neutral</span>
+                </div>
+                 <div style="margin-bottom: 10px;">
+                    <strong>Anxiety Level:</strong> <span id="anxiety-display" style="color: var(--success);">Low</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="glass-card settings-card">
+                <div class="modal-header">
+                    <h2>Customization</h2>
+                    <button id="close-settings" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Agency/Project Name</label>
+                        <input type="text" id="conf-title" placeholder="Ninja Meeting">
+                    </div>
+                    <div class="form-group">
+                        <label>Logo URL</label>
+                        <input type="text" id="conf-logo" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label>Primary Color</label>
+                        <input type="color" id="conf-primary" value="#6366f1">
+                    </div>
+                    <div class="form-group">
+                        <label>Secondary Color</label>
+                        <input type="color" id="conf-secondary" value="#8b5cf6">
+                    </div>
+                    <div class="form-group">
+                        <label>Background Color</label>
+                        <input type="color" id="conf-bg" value="#0f111a">
+                    </div>
+                     <div class="form-group">
+                        <label>Font Family</label>
+                        <select id="conf-font">
+                            <option value="'Outfit', sans-serif">Outfit (Modern)</option>
+                            <option value="'Roboto', sans-serif">Roboto (Neutral)</option>
+                            <option value="'Serif', serif">Serif (Classic)</option>
+                            <option value="'Courier New', monospace">Monospace (Tech)</option>
+                        </select>
+                    </div>
+                    <button id="save-config-btn" class="primary-btn" style="width: 100%; margin-top: 1rem;">Apply & Save</button>
+                </div>
+            </div>
+        </div>
       </div>
-    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
