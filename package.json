@@ -1,5 +1,5 @@
 {
-  "name": "@purecore/ninjameeting",
+  "name": "ninjalive",
   "version": "0.1.0",
   "scripts": {
     "install:all": "npm install --prefix client && npm install --prefix server && npm install --prefix browser-proxy",
@@ -8,6 +8,8 @@
     "start": "node server/index.js",
     "start:proxy": "cd browser-proxy && node index.js"
   },
+  "author": "JNascimento",
+  "license": "MIT",
   "dependencies": {
     "@simplewebauthn/server": "^13.2.2",
     "body-parser": "^2.2.1"

@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browser Proxy</title>
+    <title>ninjameeting proxy - a purecore WebRTC Meeting System Browser Proxy</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+
     <style>
+        @import url("style.css");
         body { font-family: sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
         #controls { margin-bottom: 20px; display: flex; gap: 10px; }
         input { padding: 8px; border-radius: 4px; border: none; min-width: 300px; }
@@ -14,14 +17,16 @@
         #viewport { display: block; max-width: 100%; cursor: crosshair; }
         .status { margin-top: 10px; color: #888; }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
 </head>
 <body>
-    <h1>P2P Browser Proxy</h1>
+    <h1>ninja meeting proxy - a purecore WebRTC Meeting System Browser Proxy</h1>
     
     <div id="controls">
-        <input type="text" id="url-input" placeholder="Enter P2P Server URL (e.g., http://localhost:2000)" value="http://localhost:2000">
-        <button id="launch-btn">Launch Browser</button>
-        <button id="stop-btn" class="stop">Stop</button>
+        <input type="text" id="url-input" placeholder="Enter Meeting URL (e.g., http://localhost:2000)" value="http://localhost:2000">
+        <button id="launch-btn"><i class="fa-solid fa-play"></i> Launch Browser</button>
+        <button id="stop-btn" class="stop"><i class="fa-solid fa-stop"></i> Stop</button>
     </div>
 
     <div id="viewport-container">
@@ -33,7 +38,7 @@
     <!-- Instructions -->
     <div style="margin-top:20px; max-width: 600px; text-align: left; background:#333; padding:15px; border-radius:8px;">
         <h3>How to use:</h3>
-        <p>1. Enter the URL of the P2P application you want to proxy.</p>
+        <p>1. Enter the URL of the meeting you want to proxy.</p>
         <p>2. Click <strong>Launch</strong>. The server will start a headless Chromium instance.</p>
         <p>3. The view below is a live stream. <strong>Clicking</strong> on the image sends clicks to the browser.</p>
         <p>4. Share this page with your audience so they can watch (read-only if you disable their input permissions in code, currently open).</p>
