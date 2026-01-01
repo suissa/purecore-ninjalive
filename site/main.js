@@ -116,7 +116,7 @@ lenis.on('scroll', (e) => {
   const skew = velocity * 0.08;
   const scale = 1 + Math.abs(velocity) * 0.0001;
 
-  gsap.to(".hero, .features-section, .comparison-section, .cta-section", {
+  gsap.to(".hero, .features-section, .comparison-section, .oss-section, .cta-section", {
     skewY: skew * -0.1,
     scaleY: scale,
     scaleX: 1, // Explicitly keep scaleX as 1

@@ -446,3 +446,61 @@ footer {
     display: none;
   }
 }
+/* OSS Section */
+.oss-section {
+  padding: 8rem 5%;
+  background: #0b0d14;
+}
+
+.oss-content {
+  display: flex;
+  align-items: center;
+  gap: 4rem;
+}
+
+.oss-text {
+  flex: 1;
+}
+
+.oss-text h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.oss-text p {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.oss-text strong {
+  color: var(--primary);
+}
+
+.oss-visual {
+  flex: 1;
+}
+
+.code-card {
+  background: #1a1e2e;
+  padding: 2rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.code-card pre {
+  margin: 0;
+  color: var(--primary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .oss-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}
