@@ -40,10 +40,8 @@ function updateContent(lang) {
     const key = el.getAttribute('data-i18n');
     if (translations[lang] && translations[lang][key]) {
       if (key === 'nav_home') return; 
-      if (translations[lang][key].includes('<br')) {
+      if (translations[lang][key]) {
         el.innerHTML = translations[lang][key];
-      } else {
-        el.textContent = translations[lang][key];
       }
     }
   });
