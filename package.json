@@ -8,8 +8,8 @@
     "start": "node server/index.js",
     "start:proxy": "cd browser-proxy && node index.js"
   },
-  "author": "JNascimento",
-  "license": "MIT",
+  "author": "suissa",
+  "license": "Cogfulness Ethical License v1.0",
   "dependencies": {
     "@simplewebauthn/server": "^13.2.2",
     "body-parser": "^2.2.1"
