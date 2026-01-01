@@ -42,18 +42,19 @@ module.exports = {
       name: "seguranca-ninja-site",
       cwd: "./site",
       script: "npm",
-      args: "run dev",
+      args: "run dev -- --host",
       env: {
         NODE_ENV: "development",
         PORT: 5173
       },
       env_development: {
-        NODE_ENV: "development"
+        NODE_ENV: "development",
+        PORT: 5173
       },
       env_production: {
         NODE_ENV: "production",
         script: "npm",
-        args: "run preview"
+        args: "run preview -- --host"
       }
     }
   ]
