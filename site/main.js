@@ -28,21 +28,16 @@ AOS.init({
 
 gsap.registerPlugin(ScrollToPlugin);
 
-const navbar = document.querySelector(".navbar");
-const navLinks = document.querySelectorAll(".nav-links a");
-const indicator = document.querySelector(".nav-indicator");
+// --- State Management ---
+let currentLang = localStorage.getItem('ninja_lang') || 'pt-br';
+let isMobileMenuOpen = false;
 
 // --- Translation Logic ---
-let currentLang = localStorage.getItem('ninja_lang') || 'pt-br';
-
 function updateContent(lang) {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (translations[lang] && translations[lang][key]) {
-      if (key === 'nav_home') return; 
-      if (translations[lang][key]) {
-        el.innerHTML = translations[lang][key];
-      }
+      el.innerHTML = translations[lang][key];
     }
   });
   
@@ -56,60 +51,118 @@ function updateContent(lang) {
   AOS.refresh();
 }
 
-document.querySelectorAll('.lang-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const lang = btn.getAttribute('data-lang');
+// lang-switcher logic
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('lang-btn')) {
+    const lang = e.target.getAttribute('data-lang');
     if (lang !== currentLang) {
       currentLang = lang;
       updateContent(currentLang);
     }
-  });
+  }
 });
 
 updateContent(currentLang);
 
-// --- Ultra Elastic Logic ---
+// --- Navigation Logic ---
+const mainNav = document.getElementById("main-nav");
+const mobileMenuTrigger = document.getElementById("mobile-menu-trigger");
+const mobileMenuContainer = document.getElementById("mobile-menu-container");
+const mobileOverlay = document.getElementById("mobile-overlay");
+const menuIconSvg = document.getElementById("menu-icon-svg");
+const dockLinks = document.querySelectorAll(".nav-dock-link");
+const mobileLinks = document.querySelectorAll(".nav-mobile-link");
+const sections = ["home", "features", "security", "comparison", "oss"];
 
-function moveIndicator(target) {
-  if (!indicator) return;
-  const rect = target.getBoundingClientRect();
-  const parentRect = target.parentElement.getBoundingClientRect();
-  
-  gsap.to(indicator, {
-    left: rect.left - parentRect.left,
-    width: rect.width,
-    duration: 0.8,
-    ease: "elastic.out(1, 0.3)",
+function toggleMobileMenu(open) {
+  isMobileMenuOpen = open;
+  if (open) {
+    mobileMenuContainer.classList.remove("pointer-events-none");
+    mobileOverlay.classList.remove("pointer-events-none");
+    
+    gsap.to(mobileOverlay, { opacity: 1, duration: 0.5 });
+    gsap.fromTo(mobileMenuContainer, 
+      { y: 50, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.6, ease: "elastic.out(1, 0.6)" }
+    );
+    // Switch to X icon
+    menuIconSvg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+  } else {
+    gsap.to(mobileOverlay, { opacity: 0, duration: 0.3 });
+    gsap.to(mobileMenuContainer, {
+      y: 20,
+      opacity: 0,
+      duration: 0.4,
+      ease: "power2.in",
+      onComplete: () => {
+        mobileMenuContainer.classList.add("pointer-events-none");
+        mobileOverlay.classList.add("pointer-events-none");
+      }
+    });
+    // Switch back to Hamburger icon
+    menuIconSvg.innerHTML = '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>';
+  }
+}
+
+if (mobileMenuTrigger) {
+  mobileMenuTrigger.addEventListener("click", () => toggleMobileMenu(!isMobileMenuOpen));
+}
+if (mobileOverlay) {
+  mobileOverlay.addEventListener("click", () => toggleMobileMenu(false));
+}
+
+// Back to top button in mobile menu
+const backToTopBtn = document.getElementById("mobile-back-to-top");
+if (backToTopBtn) {
+  backToTopBtn.addEventListener("click", () => {
+    lenis.scrollTo(0);
+    toggleMobileMenu(false);
   });
 }
 
+// Home button in dock
+const homeBtn = document.getElementById("dock-home-btn");
+if (homeBtn) {
+  homeBtn.addEventListener("click", () => lenis.scrollTo(0));
+}
+
+// Handle clicks for all navigation links
+[...dockLinks, ...mobileLinks].forEach(link => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const targetId = link.getAttribute("href");
+    const targetElement = document.querySelector(targetId);
+    if (targetElement) {
+      lenis.scrollTo(targetElement, { offset: -20 });
+    }
+    if (isMobileMenuOpen) toggleMobileMenu(false);
+  });
+});
+
+// --- Scroll/Active Section Logic ---
 lenis.on('scroll', (e) => {
   const scrollY = e.animatedScroll;
-  if (scrollY > 50) {
-    navbar.classList.add("scrolled");
-  } else {
-    navbar.classList.remove("scrolled");
-  }
   
+  // Highlight active link
   let current = "";
-  document.querySelectorAll("section[id]").forEach((section) => {
-    const sectionTop = section.offsetTop;
-    if (scrollY >= sectionTop - 150) {
-      current = section.getAttribute("id");
-    }
-  });
-
-  navLinks.forEach((a) => {
-    if (a.getAttribute("href") === `#${current}`) {
-      if (!a.classList.contains("active")) {
-        a.classList.add("active");
-        moveIndicator(a);
+  sections.forEach((id) => {
+    const section = document.getElementById(id);
+    if (section) {
+      const sectionTop = section.offsetTop;
+      if (scrollY >= sectionTop - 150) {
+        current = id;
       }
-    } else {
-      a.classList.remove("active");
     }
   });
 
+  dockLinks.forEach((a) => {
+    const isActive = a.getAttribute("href") === `#${current}`;
+    a.classList.toggle("text-primary", isActive);
+    a.classList.toggle("font-bold", isActive);
+    a.classList.toggle("text-white/60", !isActive);
+  });
+
+  // Skew effect on scroll
   const velocity = e.velocity;
   const skew = velocity * 0.08;
   const scale = 1 + Math.abs(velocity) * 0.0001;
@@ -117,69 +170,26 @@ lenis.on('scroll', (e) => {
   gsap.to(".hero, .features-section, .comparison-section, .oss-section, .cta-section", {
     skewY: skew * -0.1,
     scaleY: scale,
-    scaleX: 1, // Explicitly keep scaleX as 1
+    scaleX: 1,
     duration: 0.4,
     ease: "power2.out",
     overwrite: true
   });
 });
 
-navLinks.forEach((anchor) => {
-  anchor.addEventListener("click", function (e) {
-    e.preventDefault();
-    const targetId = this.getAttribute("href");
-    const targetElement = document.querySelector(targetId);
-    
-    if (targetElement) {
-      moveIndicator(this);
-      const targetScroll = targetElement.offsetTop - 80;
-      const scrollProxy = { y: lenis.scroll };
-      gsap.to(scrollProxy, {
-        y: targetScroll,
-        duration: 2,
-        ease: "elastic.out(1, 0.5)",
-        onUpdate: () => {
-          lenis.scrollTo(scrollProxy.y, { immediate: true });
-        }
-      });
-    }
-  });
-});
-
-// --- Elastic Card Hover Logic (DIAGONAL FOCUS) ---
+// --- Elastic Card Hover Logic ---
 setTimeout(() => {
   const cards = document.querySelectorAll('.feature-card');
-  
   cards.forEach(card => {
-    card.style.transition = 'none';
-
     card.addEventListener('mouseenter', () => {
-      gsap.killTweensOf(card);
-      card.style.zIndex = "999";
-      
-      gsap.to(card, {
-        scale: 1.1,
-        duration: 0.5, // Faster entry
-        ease: "back.out(2)", // Snappy entry
-        overwrite: 'all'
-      });
+      gsap.to(card, { scale: 1.1, duration: 0.5, ease: "back.out(2)", overwrite: 'all' });
+      card.style.zIndex = "40";
     });
-
     card.addEventListener('mouseleave', () => {
-      gsap.killTweensOf(card);
-      
-      gsap.to(card, {
-        scale: 1,
-        duration: 1.5, // Faster total duration
-        // Much stronger amplitude (2.5) and lower period (0.2) for rapid, strong vibration
-        ease: "elastic.out(2.5, 0.2)",
-        onComplete: () => {
-          card.style.zIndex = "10";
-        },
-        overwrite: 'all'
-      });
+      gsap.to(card, { scale: 1, duration: 1.5, ease: "elastic.out(2.5, 0.2)", overwrite: 'all' });
+      card.style.zIndex = "10";
     });
   });
 }, 500);
 
-console.log("ninjalive Site: DIAGONAL ELASTIC MOD ACTIVATED 🥷🚀");
+console.log("Segurança ninja Site: DOCK MENU ACTIVATED 🥷⚓");

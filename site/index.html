@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ninjalive - Maximum Privacy Video Calls</title>
+    <title>Segurança ninja - Maximum Privacy Video Calls</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link
@@ -15,46 +15,121 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Arizonia&family=Story+Script&family=Smooch&family=Lexend&display=swap');
+      
+      .arizonia-regular, h1, h2, h3, h4, h5, h6 {
+        font-family: "Arizonia", cursive;
+        font-weight: 400;
+        font-style: normal;
+      }
+      .smooch-regular, h1, h2, h3, h4, h5, h6 {
+        font-family: "Smooch", cursive;
+        font-weight: 400;
+        font-style: normal;
+      }
+      .lexend-regular, p, span {
+        font-family: "Lexend", cursive;
+        font-weight: 400;
+        font-style: normal;
+      }
+      .story-script-regular, h1 {
+        font-family: "Story Script", cursive;
+        font-weight: 400;
+        font-style: normal;
+      }
+    </style>
   </head>
   <body>
     <!-- Innovative Navigation -->
-    <nav class="navbar" data-aos="fade-down">
-      
-      <div class="nav-links">
-        <a href="#home" data-i18n="nav_home">
-          <div class="logo">
-        <span>ninja</span>
-        <img src="favicon2.png" alt="ninjalive Logo" class="nav-logo" />
-      </div>
-        </a>
-        <a href="#features" data-i18n="nav_features">Features</a>
-        <a href="#security" data-i18n="nav_security">Security</a>
-        <a href="#comparison" data-i18n="nav_comparison">Comparison</a>
-        <a href="#oss" data-i18n="oss_nav">Open Source</a>
-        <div class="nav-indicator"></div>
-      </div>
-      <div class="nav-actions">
-        <div class="lang-switcher">
-          <button class="lang-btn active" data-lang="pt-br">PT</button>
-          <span>/</span>
-          <button class="lang-btn" data-lang="en">EN</button>
+    <!-- New Bottom Dock Navigation -->
+    <nav id="main-nav" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 w-auto min-w-fit px-2 py-2 rounded-full backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/60 hover:border-white/20 flex items-center gap-1">
+        
+        <!-- Home/Logo - Dock (Desktop & Mobile) -->
+        <button id="dock-home-btn" class="flex items-center justify-center w-10 h-10 md:w-10 md:h-10 w-16 h-16 rounded-full hover:bg-white/10 transition-colors group">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="hidden md:block text-primary group-hover:rotate-180 transition-transform duration-500">
+                <circle cx="12" cy="12" r="2"/>
+                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/>
+                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-45 12 12)"/>
+            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="block md:hidden text-primary group-hover:rotate-180 transition-transform duration-500">
+                <circle cx="12" cy="12" r="2"/>
+                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/>
+                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-45 12 12)"/>
+            </svg>
+        </button>
+
+        <!-- Links container (Desktop Only) -->
+        <div class="hidden md:flex items-center gap-1">
+            <div class="w-[1px] h-6 bg-white/10 mx-1"></div>
+            <a href="#features" class="nav-dock-link font-body text-xs px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="nav_features">Features</a>
+            <a href="#security" class="nav-dock-link font-body text-xs px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="nav_security">Security</a>
+            <a href="#comparison" class="nav-dock-link font-body text-xs px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="nav_comparison">Comparison</a>
+            <a href="#oss" class="nav-dock-link font-body text-xs px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="oss_nav">Open Source</a>
         </div>
-        <a href="https://ninjalive.clan.purecore.codes" class="btn-nav" data-i18n="nav_launch">Launch App</a>
-      </div>
+
+        <!-- Vertical Divider (Mobile Only) -->
+        <div class="md:hidden w-[1px] h-6 bg-white/10 mx-1"></div>
+
+        <!-- Mobile Menu Trigger -->
+        <div class="md:hidden flex items-center justify-center px-1">
+            <button id="mobile-menu-trigger" class="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 bg-primary/20 border border-primary/30 hover:scale-110">
+                <svg id="menu-icon-svg" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary transition-all duration-500"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+        </div>
     </nav>
 
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500 md:hidden"></div>
+
+    <!-- Mobile Menu Slide-up Container -->
+    <div id="mobile-menu-container" class="fixed bottom-24 left-6 right-6 z-40 md:hidden transition-all duration-500 ease-out translate-y-10 opacity-0 pointer-events-none">
+        <div class="bg-black/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 shadow-2xl overflow-hidden">
+            <div class="flex flex-col gap-1">
+                <a href="#features" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="nav_features">
+                    <span class="font-heading text-lg">Features</span>
+                </a>
+                <a href="#security" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="nav_security">
+                    <span class="font-heading text-lg">Security</span>
+                </a>
+                <a href="#comparison" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="nav_comparison">
+                    <span class="font-heading text-lg">Comparison</span>
+                </a>
+                <a href="#oss" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="oss_nav">
+                    <span class="font-heading text-lg">Open Source</span>
+                </a>
+                
+                <div class="h-[1px] bg-white/5 my-2"></div>
+                <div class="flex justify-center gap-4 py-2">
+                    <button class="lang-btn text-white/60 hover:text-white" data-lang="pt-br">PT</button>
+                    <span class="text-white/20">|</span>
+                    <button class="lang-btn text-white/60 hover:text-white" data-lang="en">EN</button>
+                </div>
+                <button id="mobile-back-to-top" class="w-full p-4 text-center text-sm font-body text-primary underline-offset-4 hover:underline">
+                    Back to Top
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
     <!-- Hero Section -->
-    <section class="hero" id="home">
+    <section class="hero pt-4" id="home">
       <div class="hero-content" data-aos="fade-up">
-        <div class="badge-new" data-i18n="hero_badge">Version 1.0 Available</div>
+        <div class="hidden md:inline-block badge-new" data-i18n="hero_badge">Version 1.0 Available</div>
         <h1 data-i18n="hero_title">Invisible.<br />Secure.<br />Limitless.</h1>
-        <p data-i18n="hero_desc">
+        <p class="hidden md:block" data-i18n="hero_desc">
           The first P2P Video Call System that respects your privacy. No servers
           recorded your data. No sign-ups needed.
         </p>
         <div class="hero-btns">
-          <a href="https://ninjalive.clan.purecore.codes" class="btn-primary">
+          <a href="https://ninjalive.clan.purecore.codes" class="hidden md:inline-block btn-primary">
             <i class="fa-solid fa-rocket"></i> <span data-i18n="hero_btn_start">Start Instant Meeting</span>
+          </a>
+          <a href="https://ninjalive.clan.purecore.codes" class="inline-block md:hidden btn-primary">
+            <i class="fa-solid fa-rocket"></i> <span>Start</span>
           </a>
           <a href="#features" class="btn-secondary" data-i18n="hero_btn_more">Learn More</a>
         </div>
@@ -66,9 +141,9 @@
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="features-section">
-      <div class="section-header" data-aos="fade-up">
-        <h2 data-i18n="features_title">Ninja Features</h2>
+    <section id="features" class="features-section !pt-8">
+      <div class="section-header pb-8" data-aos="fade-up">
+        <h2 class="smooch-regular text-4xl" data-i18n="features_title">Ninja Features</h2>
         <p class="subtitle" data-i18n="features_subtitle">Everything you need for productive and private meetings.</p>
       </div>
 
@@ -121,7 +196,7 @@
     <!-- Security Section -->
     <section id="security" class="features-section" style="background: var(--bg-dark);">
       <div class="section-header" data-aos="fade-up">
-        <h2 data-i18n="security_title">Why ninjalive?</h2>
+        <h2 data-i18n="security_title">Why Segurança ninja?</h2>
         <p class="subtitle" data-i18n="security_subtitle">Designed for the security-conscious.</p>
       </div>
 
@@ -162,7 +237,7 @@
             <thead>
               <tr>
                 <th data-i18n="comp_feat">Feature</th>
-                <th class="ninja-col">ninjalive</th>
+                 <th class="ninja-col">Segurança ninja</th>
                 <th>Zoom / GMeet</th>
               </tr>
             </thead>
@@ -215,8 +290,8 @@
           <div class="oss-text">
             <h2 data-i18n="oss_title">Free & Open Source</h2>
             <p class="subtitle" data-i18n="oss_subtitle">Build your own meeting system.</p>
-            <p data-i18n="oss_desc1">ninjalive is 100% open source. You can clone the repository, modify it, and use it however you like, including for commercial projects.</p>
-            <p data-i18n="oss_desc2">The only condition is to keep the <strong>'Powered by ninjalive'</strong> credit with a link to our original repository. We want to encourage the creation of secure meeting systems without heavy infrastructure!</p>
+            <p data-i18n="oss_desc1">Segurança ninja is 100% open source. You can clone the repository, modify it, and use it however you like, including for commercial projects.</p>
+            <p data-i18n="oss_desc2">The only condition is to keep the <strong>'Powered by Segurança ninja'</strong> credit with a link to our original repository. We want to encourage the creation of secure meeting systems without heavy infrastructure!</p>
             <a href="https://github.com/suissa/purecore-ninjalive" target="_blank" class="btn-secondary">
               <i class="fa-brands fa-github"></i> <span data-i18n="oss_btn">View Repository on GitHub</span>
             </a>
@@ -238,12 +313,12 @@ npm run dev</code></pre>
       <h2 data-i18n="cta_title">Ready to go dark?</h2>
       <p data-i18n="cta_desc">Start a secure meeting in seconds.</p>
       <a href="https://ninjalive.clan.purecore.codes" class="btn-primary large" data-i18n="cta_btn">
-        Launch ninjalive
+        Launch Segurança ninja
       </a>
     </section>
 
     <footer>
-      <p data-i18n="footer_text">&copy; 2026 ninjalive. Open Source Project.</p>
+      <p data-i18n="footer_text">&copy; 2026 Segurança ninja. Open Source Project.</p>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

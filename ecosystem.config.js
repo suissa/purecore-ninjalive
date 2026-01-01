@@ -1,7 +1,7 @@
 module.exports = {
   apps : [
     {
-      name: "ninjameeting",
+      name: "seguranca-ninja",
       script: "./server/index.js",
       instances: 1,
       autorestart: true,
@@ -20,7 +20,7 @@ module.exports = {
       }
     },
     {
-      name: "ninjameeting-proxy",
+      name: "seguranca-ninja-proxy",
       script: "./browser-proxy/index.js",
       instances: 1,
       autorestart: true,
@@ -39,7 +39,7 @@ module.exports = {
       }
     },
     {
-      name: "Ninjameeting site",
+      name: "seguranca-ninja-site",
       cwd: "./site",
       script: "npm",
       args: "run dev",
