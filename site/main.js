@@ -40,10 +40,8 @@ function updateContent(lang) {
     const key = el.getAttribute('data-i18n');
     if (translations[lang] && translations[lang][key]) {
       if (key === 'nav_home') return; 
-      if (translations[lang][key].includes('<br')) {
+      if (translations[lang][key]) {
         el.innerHTML = translations[lang][key];
-      } else {
-        el.textContent = translations[lang][key];
       }
     }
   });
@@ -113,12 +111,13 @@ lenis.on('scroll', (e) => {
   });
 
   const velocity = e.velocity;
-  const skew = velocity * 0.1;
+  const skew = velocity * 0.08;
   const scale = 1 + Math.abs(velocity) * 0.0001;
 
-  gsap.to("section", {
+  gsap.to(".hero, .features-section, .comparison-section, .oss-section, .cta-section", {
     skewY: skew * -0.1,
     scaleY: scale,
+    scaleX: 1, // Explicitly keep scaleX as 1
     duration: 0.4,
     ease: "power2.out",
     overwrite: true
