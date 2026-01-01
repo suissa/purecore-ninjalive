@@ -1,12 +1,15 @@
 {
-  "name": "@purecore/ninjameeting",
+  "name": "ninjalive",
   "version": "0.1.0",
   "scripts": {
-    "install:all": "npm install --prefix client && npm install --prefix server",
+    "install:all": "npm install --prefix client && npm install --prefix server && npm install --prefix browser-proxy",
     "build:client": "npm run build --prefix client",
     "postinstall": "npm run install:all && npm run build:client",
-    "start": "node server/index.js"
+    "start": "node server/index.js",
+    "start:proxy": "cd browser-proxy && node index.js"
   },
+  "author": "suissa",
+  "license": "Cogfulness Ethical License v1.0",
   "dependencies": {
     "@simplewebauthn/server": "^13.2.2",
     "body-parser": "^2.2.1"
