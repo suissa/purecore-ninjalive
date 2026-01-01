@@ -7,7 +7,7 @@ export const defaultConfig = {
   },
   branding: {
     logoUrl: "", // Empty means default icon
-    title: "ninjalive",
+    title: "Segurança ninja",
   },
   analysis: {
     enabled: true,
