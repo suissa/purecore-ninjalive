@@ -156,16 +156,12 @@ setTimeout(() => {
 
     card.addEventListener('mouseenter', () => {
       gsap.killTweensOf(card);
-      // Ensure card is on top
       card.style.zIndex = "999";
       
       gsap.to(card, {
-        x: 40,
-        y: -40,
-        z: 100,
         scale: 1.1,
-        duration: 2,
-        ease: "power2.out",
+        duration: 0.5, // Faster entry
+        ease: "back.out(2)", // Snappy entry
         overwrite: 'all'
       });
     });
@@ -173,28 +169,14 @@ setTimeout(() => {
     card.addEventListener('mouseleave', () => {
       gsap.killTweensOf(card);
       
-      const tl = gsap.timeline({
-        onComplete: () => {
-          card.style.zIndex = "10"; // Reset z-index after animation
-        }
-      });
-      
-      // 1. "Enviar" para a diagonal oposta com scale 0.5
-      tl.to(card, {
-        x: -40,
-        y: 40,
-        scale: 0.5,
-        z: 0,
-        duration: 0.4,
-        ease: "power2.in"
-      })
-      // 2. Voltar elasticamente para o centro com scale 1
-      .to(card, {
-        x: 0,
-        y: 0,
+      gsap.to(card, {
         scale: 1,
-        duration: 2.6, 
-        ease: "elastic.out(1.2, 0.4)",
+        duration: 1.5, // Faster total duration
+        // Much stronger amplitude (2.5) and lower period (0.2) for rapid, strong vibration
+        ease: "elastic.out(2.5, 0.2)",
+        onComplete: () => {
+          card.style.zIndex = "10";
+        },
         overwrite: 'all'
       });
     });
