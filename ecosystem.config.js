@@ -1,21 +1,17 @@
 module.exports = {
-  apps: [
-    {
-      name: "ninjameeting",
-      script: "./server/index.js",
-      env: {
-        NODE_ENV: "production",
-        PORT: 2000
-      }
+  apps : [{
+    name: "ninjalive SERVER",
+    script: "./server/index.js",
+    instances: 1,
+    autorestart: true,
+    watch: false,
+    env: {
+      NODE_ENV: "development",
+      PORT: 7007
     },
-    {
-      name: "ninjameeting-proxy",
-      cwd: "./browser-proxy",
-      script: "index.js",
-      env: {
-        NODE_ENV: "production",
-        PORT: 3001
-      }
+    env_production: {
+      NODE_ENV: "production",
+      PORT: 7007
     }
-  ]
+  }]
 };
