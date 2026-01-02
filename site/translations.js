@@ -23,7 +23,7 @@ export const translations = {
     feat_chat_title: "Tempo Real",
     feat_chat_desc:
       "Troque mensagens e links durante a chamada. O histórico é apagado assim que a sala fecha.",
-    feat_admin_title: "Admin",
+    feat_admin_title: "VC Admin",
     feat_admin_desc:
       "Se você criar a sala, terá poderes especiais: Mute All, silenciar usuários individualmente ou expulsá-los da reunião.",
     feat_transcribe_title: "Transcrição",
@@ -94,22 +94,22 @@ export const translations = {
     features_title: "Ninja Features",
     features_subtitle:
       "Everything you need for productive and private meetings.",
-    feat_mesh_title: "P2P Mesh Network",
+    feat_mesh_title: "P2P Mesh",
     feat_mesh_desc:
       "Direct connections between participants, ensuring low latency and maximum privacy.",
-    feat_screen_title: "Screen Sharing",
+    feat_screen_title: "Screen Share",
     feat_screen_desc:
       "Share presentations or your entire desktop with a single click, in high definition.",
-    feat_chat_title: "Real-time Chat",
+    feat_chat_title: "Real-time",
     feat_chat_desc:
       "Exchange messages and links during the call. History is wiped as soon as the room closes.",
-    feat_admin_title: "👑 Admin Powers",
+    feat_admin_title: "VC Admin",
     feat_admin_desc:
       "If you are the room creator, you get special powers: Mute All, Mute specific users, or Kick them out properly.",
-    feat_transcribe_title: "📝 Audio Transcription",
+    feat_transcribe_title: "Transcript",
     feat_transcribe_desc:
       "Auto-local transcription with an option to download the full session transcript as a .txt file.",
-    feat_ai_title: "🤖 Ninja AI Integration",
+    feat_ai_title: "Ninja AI",
     feat_ai_desc:
       "Connect your own API key to unlock AI chat, real-time translation, advanced transcription, and automatic meeting summaries.",
     security_title: "Why ninjalive?",
