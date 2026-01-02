@@ -1,6 +1,6 @@
 export const translations = {
   "pt-br": {
-    title: "Segurança ninja - Videochamadas com Privacidade Máxima",
+    title: "ninjalive - Videochamadas com Privacidade Máxima",
     nav_features: "Funcionalidades",
     nav_security: "Segurança",
     nav_comparison: "Comparação",
@@ -20,19 +20,19 @@ export const translations = {
     feat_screen_title: "Compartilhamento de Tela",
     feat_screen_desc:
       "Compartilhe apresentações ou seu desktop inteiro com um único clique, em alta definição.",
-    feat_chat_title: "Chat em Tempo Real",
+    feat_chat_title: "Tempo Real",
     feat_chat_desc:
       "Troque mensagens e links durante a chamada. O histórico é apagado assim que a sala fecha.",
-    feat_admin_title: "Poderes de Admin",
+    feat_admin_title: "Admin",
     feat_admin_desc:
       "Se você criar a sala, terá poderes especiais: Mute All, silenciar usuários individualmente ou expulsá-los da reunião.",
-    feat_transcribe_title: "Transcrição de Áudio",
+    feat_transcribe_title: "Transcrição",
     feat_transcribe_desc:
       "Transcrição local automática (PT-BR) com opção de baixar o histórico completo da sessão em .txt.",
-    feat_ai_title: "Integração com IA Ninja",
+    feat_ai_title: "IA Ninja",
     feat_ai_desc:
       "Conecte sua própria chave de API para desbloquear chat com IA, tradução simultânea, transcrição avançada e resumos automáticos da reunião.",
-    security_title: "Segurança ninja",
+    security_title: "ninjalive",
     security_subtitle: "Projetado para quem valoriza a segurança.",
     feat_anon_title: "Anonimato Total",
     feat_anon_desc:
@@ -76,7 +76,7 @@ export const translations = {
     oss_desc1:
       "O ninjalive é 100% open source. Você pode clonar o repositório, modificar e usar como quiser, inclusive em projetos comerciais.",
     oss_desc2:
-      "A única condição é manter o crédito <strong>'Powered by Segurança ninja'</strong> com o link para o nosso repositório original. Queremos incentivar a criação de sistemas de reuniões seguros e sem infraestrutura pesada!",
+      "A única condição é manter o crédito <strong>'Powered by ninjalive'</strong> com o link para o nosso repositório original. Queremos incentivar a criação de sistemas de reuniões seguros e sem infraestrutura pesada!",
     oss_btn: "Ver Repositório no GitHub",
   },
   en: {

@@ -1,6 +1,6 @@
 export const translations = {
   "pt-br": {
-    title: "Segurança ninja - Videochamadas com Privacidade Máxima",
+    title: "ninjalive - Videochamadas com Privacidade Máxima",
     nav_features: "Funcionalidades",
     nav_security: "Segurança",
     nav_comparison: "Comparação",
@@ -32,7 +32,7 @@ export const translations = {
     feat_ai_title: "Integração com IA Ninja",
     feat_ai_desc:
       "Conecte sua própria chave de API para desbloquear chat com IA, tradução simultânea, transcrição avançada e resumos automáticos da reunião.",
-    security_title: "Segurança ninja",
+    security_title: "ninjalive",
     security_subtitle: "Projetado para quem valoriza a segurança.",
     feat_anon_title: "Anonimato Total",
     feat_anon_desc:
@@ -68,15 +68,15 @@ export const translations = {
     comp_open_others: "Caixa-Preta (Fechado) 🔴",
     cta_title: "Pronto para ficar invisível?",
     cta_desc: "Inicie uma reunião segura em segundos.",
-    cta_btn: "Abrir Segurança ninja",
-    footer_text: "© 2026 Segurança ninja. Projeto de Código Aberto.",
+    cta_btn: "Abrir ninjalive",
+    footer_text: "© 2026 ninjalive. Projeto de Código Aberto.",
     oss_nav: "Open Source",
     oss_title: "Software Livre & Aberto",
     oss_subtitle: "Construa o seu próprio sistema de reuniões.",
     oss_desc1:
-      "O Segurança ninja é 100% open source. Você pode clonar o repositório, modificar e usar como quiser, inclusive em projetos comerciais.",
+      "O ninjalive é 100% open source. Você pode clonar o repositório, modificar e usar como quiser, inclusive em projetos comerciais.",
     oss_desc2:
-      "A única condição é manter o crédito <strong>'Powered by Segurança ninja'</strong> com o link para o nosso repositório original. Queremos incentivar a criação de sistemas de reuniões seguros e sem infraestrutura pesada!",
+      "A única condição é manter o crédito <strong>'Powered by ninjalive'</strong> com o link para o nosso repositório original. Queremos incentivar a criação de sistemas de reuniões seguros e sem infraestrutura pesada!",
     oss_btn: "Ver Repositório no GitHub",
   },
   en: {

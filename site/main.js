@@ -316,4 +316,4 @@ if (mascot && smokeMap) {
   });
 }
 
-console.log("Segurança ninja Site: DOCK MENU ACTIVATED 🥷⚓");
+console.log("ninjalive Site: DOCK MENU ACTIVATED 🥷⚓");
