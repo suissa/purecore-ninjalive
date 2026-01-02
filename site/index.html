@@ -68,6 +68,26 @@
     </style>
   </head>
   <body>
+    <!-- Top Right Language Selector -->
+    <div
+      id="top-lang-selector"
+      class="fixed top-6 right-6 z-50 flex items-center gap-2 backdrop-blur-sm bg-black/20 px-3 py-1 rounded-full border border-white/5"
+    >
+      <button
+        class="lang-btn text-sm font-bold text-white/70 hover:text-white transition-colors"
+        data-lang="pt-br"
+      >
+        PT
+      </button>
+      <span class="text-white/20 text-xs">|</span>
+      <button
+        class="lang-btn text-sm font-bold text-white/70 hover:text-white transition-colors"
+        data-lang="en"
+      >
+        EN
+      </button>
+    </div>
+
     <!-- SVG Filter for Ninja Vanish Smoke Effect -->
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none">
       <filter id="ninja-smoke">
@@ -556,48 +576,7 @@ npm run dev</code></pre>
       <div class="footer-container">
         <!-- Brand / About -->
         <div class="footer-brand">
-          <h2>Segurança ninja</h2>
-          <p data-i18n="footer_about">
-            Open-source video calls for the privacy-conscious. No tracking, no
-            storage, just pure connection. Built for the modern web.
-          </p>
-        </div>
-
-        <!-- Links -->
-        <div class="footer-links">
-          <h3 data-i18n="footer_quick_links">Quick Links</h3>
-          <ul>
-            <li><a href="#home" data-i18n="nav_home">Home</a></li>
-            <li><a href="#features" data-i18n="nav_features">Features</a></li>
-            <li><a href="#security" data-i18n="nav_security">Security</a></li>
-            <li>
-              <a href="#comparison" data-i18n="nav_comparison">Comparison</a>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Resources -->
-        <div class="footer-links">
-          <h3 data-i18n="footer_resources">Resources</h3>
-          <ul>
-            <li>
-              <a
-                href="https://github.com/suissa/purecore-ninjalive"
-                target="_blank"
-                >GitHub Repo</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://github.com/suissa/purecore-ninjalive/issues"
-                target="_blank"
-                >Report Issue</a
-              >
-            </li>
-            <li>
-              <a href="https://purecore.codes" target="_blank">Purecore</a>
-            </li>
-          </ul>
+          <img src="logo-purelog.png" alt="Logo" class="pt-12 block mx-auto" />
         </div>
       </div>
 
