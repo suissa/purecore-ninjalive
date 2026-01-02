@@ -42,12 +42,25 @@
     </style>
   </head>
   <body>
+    <!-- SVG Filter for Ninja Vanish Smoke Effect -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+      <filter id="ninja-smoke">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" result="noise">
+          <animate attributeName="baseFrequency" dur="5s" values="0.012;0.02;0.012" repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" id="smoke-map">
+            <animate id="smoke-anim" attributeName="scale" dur="3s" values="0;100" fill="freeze" begin="indefinite" />
+            <animate id="smoke-reverse" attributeName="scale" dur="1s" values="100;0" fill="freeze" begin="indefinite" />
+        </feDisplacementMap>
+      </filter>
+    </svg>
+
     <!-- Innovative Navigation -->
     <!-- New Bottom Dock Navigation -->
-    <nav id="main-nav" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 md:w-[600px] min-w-fit px-2 py-2 rounded-full backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/60 hover:border-white/20 flex items-center gap-1">
+    <nav id="main-nav" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 md:w-[700px] min-w-fit px-2 py-2 rounded-full backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/60 hover:border-white/20 flex items-center gap-1">
         
         <!-- Home/Logo - Dock (Desktop & Mobile) -->
-        <button id="dock-home-btn" class="flex items-center justify-center w-10 h-10 md:w-10 md:h-10 w-16 h-16 rounded-full hover:bg-white/10 transition-colors group">
+        <button id="dock-home-btn" class="relative left-[20px] flex items-center justify-center w-10 h-10 md:w-10 md:h-10 w-16 h-16 rounded-full hover:bg-white/10 transition-colors group">
             <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-white/60 group-hover:rotate-180 transition-transform duration-500">
                 <circle cx="12" cy="12" r="2"/>
                 <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/>
@@ -112,7 +125,7 @@
 
 
     <!-- Hero Section -->
-    <section class="hero pt-4" id="home">
+    <section class="hero pt-4 md:pt-12" id="home">
       <div class="hero-content" data-aos="fade-up">
         <div class="hidden md:inline-block badge-new" data-i18n="hero_badge">Version 1.0 Available</div>
         <h1 data-i18n="hero_title">Invisible.<br />Secure.<br />Limitless.</h1>
@@ -130,7 +143,7 @@
           <a href="#features" class="btn-secondary" data-i18n="hero_btn_more">Learn More</a>
         </div>
       </div>
-      <div class="hero-visual" data-aos="fade-left">
+      <div class="hero-visual flex items-center justify-center" data-aos="fade-left">
         <div class="blob-hero"></div>
         <img src="logo-ninja.png" alt="Ninja Mascot" class="mascot-float" />
       </div>

@@ -1,4 +1,5 @@
 import { translations } from './translations.js';
+import { initElasticHover } from './elastic-hover.js';
 
 // --- Lenis Smooth Scroll Setup ---
 const lenis = new Lenis({
@@ -48,7 +49,7 @@ function updateContent(lang) {
   });
 
   localStorage.setItem('ninja_lang', lang);
-  AOS.refresh();
+  if (typeof AOS !== 'undefined') AOS.refresh();
 }
 
 // lang-switcher logic
@@ -76,6 +77,8 @@ const sections = ["home", "features", "security", "comparison", "oss"];
 
 function toggleMobileMenu(open) {
   isMobileMenuOpen = open;
+  if (!mobileMenuContainer || !mobileOverlay) return;
+  
   if (open) {
     mobileMenuContainer.classList.remove("pointer-events-none");
     mobileOverlay.classList.remove("pointer-events-none");
@@ -85,8 +88,9 @@ function toggleMobileMenu(open) {
       { y: 50, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.6, ease: "elastic.out(1, 0.6)" }
     );
-    // Switch to X icon
-    menuIconSvg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+    if (menuIconSvg) {
+        menuIconSvg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+    }
   } else {
     gsap.to(mobileOverlay, { opacity: 0, duration: 0.3 });
     gsap.to(mobileMenuContainer, {
@@ -99,8 +103,9 @@ function toggleMobileMenu(open) {
         mobileOverlay.classList.add("pointer-events-none");
       }
     });
-    // Switch back to Hamburger icon
-    menuIconSvg.innerHTML = '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>';
+    if (menuIconSvg) {
+        menuIconSvg.innerHTML = '<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>';
+    }
   }
 }
 
@@ -177,19 +182,29 @@ lenis.on('scroll', (e) => {
   });
 });
 
-// --- Elastic Card Hover Logic ---
-setTimeout(() => {
-  const cards = document.querySelectorAll('.feature-card');
-  cards.forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      gsap.to(card, { scale: 1.1, duration: 0.5, ease: "back.out(2)", overwrite: 'all' });
-      card.style.zIndex = "40";
-    });
-    card.addEventListener('mouseleave', () => {
-      gsap.to(card, { scale: 1, duration: 1.5, ease: "elastic.out(2.5, 0.2)", overwrite: 'all' });
-      card.style.zIndex = "10";
-    });
+// --- Reusable Elastic Hover Effect ---
+// Call it for feature cards
+initElasticHover('.feature-card');
+
+// Also call it for the dock links if you want them elastic!
+initElasticHover('.nav-dock-link', {
+    hoverScale: 1.2,
+    hoverEase: "back.out(4)",
+    leaveEase: "elastic.out(1, 0.3)"
+});
+
+// --- Ninja Vanish Smoke Effect ---
+const mascot = document.querySelector('.mascot-float');
+const smokeMap = document.getElementById('smoke-map');
+
+if (mascot && smokeMap) {
+  const heroVisual = document.querySelector('.hero-visual');
+  heroVisual.addEventListener('mouseenter', () => {
+    gsap.to(smokeMap, { attr: { scale: 100 }, duration: 3, ease: "power2.out" });
   });
-}, 500);
+  heroVisual.addEventListener('mouseleave', () => {
+    gsap.to(smokeMap, { attr: { scale: 0 }, duration: 1, ease: "power2.in" });
+  });
+}
 
 console.log("Segurança ninja Site: DOCK MENU ACTIVATED 🥷⚓");
