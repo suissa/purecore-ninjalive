@@ -6,8 +6,8 @@ export const defaultConfig = {
     fontFamily: "'Outfit', sans-serif",
   },
   branding: {
-    logoUrl: "/logo-large.png", 
-    title: "Segurança ninja",
+    logoUrl: "/logo-large.png",
+    title: "ninjalive",
   },
   analysis: {
     enabled: true,

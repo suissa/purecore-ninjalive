@@ -74,6 +74,37 @@
         text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* Brilho suave branco opcional */
         margin: 0;
       }
+
+      .feature-card {
+        position: relative;
+        padding: 3rem 2.5rem 2.5rem 2.5rem;
+      }
+
+      /* Ícone como selo — NÃO texto */
+      .icon-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+
+        width: 40px;
+        height: 40px;
+        background-color: transparent;
+        color: #4eadfb;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 18px;
+        opacity: 0.9;
+
+        pointer-events: none;
+      }
+
+      /* Zona de exclusão do título */
+      .feature-title {
+        margin-right: 4rem; /* ESSENCIAL */
+      }
     </style>
   </head>
   <body>
@@ -359,17 +390,18 @@
     <!-- Features Section -->
     <section id="features" class="features-section !pt-8">
       <div class="section-header pb-8" data-aos="fade-up">
-        <h2 class="smooch-regular text-4xl" data-i18n="features_title">
+        <h2
+          class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent text-2xl md:text-8xl mb-8 text-center"
+        >
           Ninja Features
         </h2>
-        <p class="subtitle" data-i18n="features_subtitle">
-          Everything you need for productive and private meetings.
-        </p>
       </div>
 
       <div class="features-grid">
         <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
-          <div class="icon-box"><i class="fa-solid fa-circle-nodes"></i></div>
+          <div class="icon-badge">
+            <i class="fa-solid fa-circle-nodes"></i>
+          </div>
           <h3
             class="text-center bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent"
             data-i18n="feat_mesh_title"
@@ -381,31 +413,23 @@
             maximum privacy.
           </p>
         </div>
-        <div
-          class="feature-card relative"
-          data-aos="fade-up"
-          data-aos-delay="200"
-        >
-          <!-- Ícone flutuante (canto superior direito) -->
-          <div class="icon-box absolute top-6 right-6">
+        <div class="feature-card">
+          <div class="icon-badge">
             <i class="fa-solid fa-desktop"></i>
           </div>
 
-          <h3
-            class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent text-xl"
-            data-i18n="feat_screen_title"
-          >
-            Screen Sharing
-          </h3>
+          <h3 class="feature-title">Compartilhamento de Tela</h3>
 
-          <p class="mt-3" data-i18n="feat_screen_desc">
-            Share presentations or your entire desktop with a single click, in
-            high definition.
+          <p>
+            Compartilhe apresentações ou seu desktop inteiro com um único
+            clique, em alta definição.
           </p>
         </div>
 
         <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-          <div class="icon-box"><i class="fa-solid fa-comments"></i></div>
+          <div class="icon-badge">
+            <i class="fa-solid fa-comments"></i>
+          </div>
           <h3
             class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent"
             data-i18n="feat_chat_title"
@@ -418,7 +442,7 @@
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
-          <div class="icon-box"><i class="fa-solid fa-crown"></i></div>
+          <div class="icon-badge"><i class="fa-solid fa-crown"></i></div>
           <h3
             class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent"
             data-i18n="feat_admin_title"
@@ -431,7 +455,7 @@
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
-          <div class="icon-box"><i class="fa-solid fa-file-lines"></i></div>
+          <div class="icon-badge"><i class="fa-solid fa-file-lines"></i></div>
           <h3
             class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent"
             data-i18n="feat_transcribe_title"
@@ -444,7 +468,7 @@
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
-          <div class="icon-box"><i class="fa-solid fa-robot"></i></div>
+          <div class="icon-badge"><i class="fa-solid fa-robot"></i></div>
           <h3
             class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent"
             data-i18n="feat_ai_title"
@@ -459,54 +483,11 @@
       </div>
     </section>
 
-    <!-- Security Section -->
-    <section
-      id="security"
-      class="features-section"
-      style="background: var(--bg-dark)"
-    >
-      <div class="section-header" data-aos="fade-up">
-        <h2
-          class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent text-2xl md:text-8xl mb-8 text-center"
-          data-i18n="security_title"
-        >
-          Why ninjalive?
-        </h2>
-      </div>
-
-      <div class="features-grid">
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
-          <div class="icon-box"><i class="fa-solid fa-user-secret"></i></div>
-          <h3 data-i18n="feat_anon_title">Total Anonymity</h3>
-          <p data-i18n="feat_anon_desc">
-            No account required. Just pick a name and join. Your identity
-            remains yours.
-          </p>
-        </div>
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-          <div class="icon-box"><i class="fa-solid fa-server"></i></div>
-          <h3 data-i18n="feat_serverless_title">Serverless Media</h3>
-          <p data-i18n="feat_serverless_desc">
-            We use P2P Mesh technology. Video and audio go directly between you
-            and your peers. We don't see it.
-          </p>
-        </div>
-        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-          <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
-          <h3 data-i18n="feat_enc_title">Military Encryption</h3>
-          <p data-i18n="feat_enc_desc">
-            Powered by WebRTC standard encryption (DTLS/SRTP). Secure by
-            default.
-          </p>
-        </div>
-      </div>
-    </section>
-
     <!-- Comparison Section -->
     <section id="comparison" class="comparison-section">
       <div class="container" data-aos="fade-up">
         <h2
-          class="bg-gradient-to-b from-red-600 via-red-600 to-white bg-clip-text text-transparent text-2xl md:text-7xl mb-8 text-center"
+          class="bg-gradient-to-b from-red-600 via-red-600 to-blue-600 bg-clip-text text-transparent text-2xl md:text-7xl mb-8 text-center"
           data-i18n="comp_title"
         >
           Dare to Compare
@@ -570,6 +551,50 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+    <!-- Security Section -->
+    <section
+      id="security"
+      class="features-section"
+      style="background: var(--bg-dark)"
+    >
+      <div class="section-header" data-aos="fade-up">
+        <h2
+          class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent text-2xl md:text-8xl mb-8 text-center"
+          data-i18n="security_title"
+        >
+          Why ninjalive?
+        </h2>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+          <div class="icon-badge"><i class="fa-solid fa-user-secret"></i></div>
+          <h3 data-i18n="feat_anon_title">Total Anonymity</h3>
+          <p data-i18n="feat_anon_desc">
+            No account required. Just pick a name and join. Your identity
+            remains yours.
+          </p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+          <div class="icon-badge"><i class="fa-solid fa-server"></i></div>
+          <h3 data-i18n="feat_serverless_title">Serverless Media</h3>
+          <p data-i18n="feat_serverless_desc">
+            We use P2P Mesh technology. Video and audio go directly between you
+            and your peers. We don't see it.
+          </p>
+        </div>
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+          <div class="icon-badge">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 data-i18n="feat_enc_title">Military Encryption</h3>
+          <p data-i18n="feat_enc_desc">
+            Powered by WebRTC standard encryption (DTLS/SRTP). Secure by
+            default.
+          </p>
         </div>
       </div>
     </section>
