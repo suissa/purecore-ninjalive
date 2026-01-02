@@ -419,3 +419,16 @@ h3 {
     opacity: 0;
   }
 }
+
+/* Mobile Responsive Table */
+@media (max-width: 768px) {
+  .comparison-table th:nth-child(3),
+  .comparison-table td:nth-child(3) {
+    display: none;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 1rem 0.5rem;
+  }
+}
