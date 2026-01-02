@@ -51,7 +51,46 @@ function updateContent(lang) {
   localStorage.setItem("ninja_lang", lang);
   if (typeof AOS !== "undefined") AOS.refresh();
 
-  // Trigger Brush Reveal for the hero title - REMOVED
+  // Trigger Simple Reveal for the hero title
+  initBrushReveal(".hero h1");
+}
+
+function initBrushReveal(selector) {
+  const elements = document.querySelectorAll(selector);
+  elements.forEach((el) => {
+    if (el.querySelector(".char-span")) return;
+
+    const originalHTML = el.innerHTML;
+
+    // Split by <br> tags while keeping them
+    const parts = originalHTML.split(/(<br\s*\/?>)/i);
+    el.innerHTML = "";
+
+    parts.forEach((part) => {
+      if (part.match(/<br\s*\/?>/i)) {
+        el.insertAdjacentHTML("beforeend", part);
+      } else {
+        [...part].forEach((char) => {
+          const span = document.createElement("span");
+          span.className = "char-span";
+          span.style.opacity = "0";
+          span.innerText = char;
+          el.appendChild(span);
+        });
+      }
+    });
+
+    const chars = el.querySelectorAll(".char-span");
+
+    if (typeof gsap !== "undefined") {
+      gsap.to(chars, {
+        opacity: 1,
+        duration: 0.1,
+        stagger: 0.1,
+        ease: "none",
+      });
+    }
+  });
 }
 
 // lang-switcher logic
