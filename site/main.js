@@ -51,46 +51,62 @@ function updateContent(lang) {
   localStorage.setItem("ninja_lang", lang);
   if (typeof AOS !== "undefined") AOS.refresh();
 
-  // Trigger Simple Reveal for the hero title
-  initBrushReveal(".hero h1");
+  // Trigger Typewriter Effect
+  initTypewriter();
 }
 
-function initBrushReveal(selector) {
-  const elements = document.querySelectorAll(selector);
-  elements.forEach((el) => {
-    if (el.querySelector(".char-span")) return;
+let typewriterTimeout;
 
-    const originalHTML = el.innerHTML;
+function initTypewriter() {
+  const typeWriterElement = document.getElementById("typewriter-text");
+  if (!typeWriterElement) return;
 
-    // Split by <br> tags while keeping them
-    const parts = originalHTML.split(/(<br\s*\/?>)/i);
-    el.innerHTML = "";
+  // Clear any existing typing loop
+  if (typewriterTimeout) clearTimeout(typewriterTimeout);
 
-    parts.forEach((part) => {
-      if (part.match(/<br\s*\/?>/i)) {
-        el.insertAdjacentHTML("beforeend", part);
-      } else {
-        [...part].forEach((char) => {
-          const span = document.createElement("span");
-          span.className = "char-span";
-          span.style.opacity = "0";
-          span.innerText = char;
-          el.appendChild(span);
-        });
-      }
-    });
+  // Get words based on current language
+  const words =
+    currentLang === "en"
+      ? ["Invisible.", "Secure.", "Limitless."]
+      : ["Invisível.", "Seguro.", "Ilimitado."];
 
-    const chars = el.querySelectorAll(".char-span");
+  const typingSpeed = 150;
+  const deletingSpeed = 100;
+  const pauseTime = 2000;
 
-    if (typeof gsap !== "undefined") {
-      gsap.to(chars, {
-        opacity: 1,
-        duration: 0.1,
-        stagger: 0.1,
-        ease: "none",
-      });
+  let wordIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+
+  function type() {
+    const currentWord = words[wordIndex];
+
+    if (isDeleting) {
+      typeWriterElement.textContent = currentWord.substring(0, charIndex - 1);
+      charIndex--;
+    } else {
+      typeWriterElement.textContent = currentWord.substring(0, charIndex + 1);
+      charIndex++;
     }
-  });
+
+    let typeSpeed = isDeleting ? deletingSpeed : typingSpeed;
+
+    if (!isDeleting && charIndex === currentWord.length) {
+      typeSpeed = pauseTime;
+      isDeleting = true;
+    } else if (isDeleting && charIndex === 0) {
+      isDeleting = false;
+      wordIndex++;
+      typeSpeed = 500;
+      if (wordIndex === words.length) {
+        wordIndex = 0;
+      }
+    }
+
+    typewriterTimeout = setTimeout(type, typeSpeed);
+  }
+
+  type();
 }
 
 // lang-switcher logic

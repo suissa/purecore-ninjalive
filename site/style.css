@@ -12,7 +12,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Outfit", sans-serif;
 }
 
 html.lenis,
@@ -73,6 +72,7 @@ body {
 .hero {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   padding: 0 5%;
   position: relative;
@@ -297,4 +297,36 @@ footer {
 body h3 {
   font-size: 36px !important;
   font-family: "Outfit", sans-serif;
+}
+
+/* O elemento onde o texto aparece */
+#typewriter-text {
+  color: #58a6ff; /* Azul neon suave */
+  text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+}
+
+/* body .typewriter {
+  border: 5px solid red !important; /* TESTE */
+  font-family: "Courier New", Courier, monospace !important; /* Fonte monoespaçada é essencial para esse efeito */
+} */
+/* O cursor que pisca */
+.cursor {
+  display: inline-block;
+  width: 3px;
+  background-color: #e6edf3;
+  animation: blink 1s infinite;
+  margin-left: 5px;
+  height: 1em; /* Altura relativa ao texto */
+  vertical-align: text-bottom;
+}
+
+/* Animação do cursor */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
