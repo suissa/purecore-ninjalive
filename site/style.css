@@ -258,66 +258,123 @@ body {
 }
 
 /* Footer & Other Section Fixes */
-footer {
-  padding: 4rem 5% 30rem; /* Massive padding to allow elastic bounce at the end */
+
+/* CTA Section */
+.cta-section {
+  padding: 8rem 5%;
   text-align: center;
-  color: #64748b;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+  position: relative;
+  z-index: 10;
+  margin-bottom: 0; /* Garante que não invada o footer */
 }
 
-@media (max-width: 768px) {
-  .hero {
-    flex-direction: column;
-    padding-top: 4rem;
-    text-align: center;
-  }
-
-  .hero-content h1 {
-    font-size: 3.5rem;
-    line-height: 1;
-  }
-
-  .hero-btns {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .mascot-float {
-    width: 80% !important;
-    max-width: 300px;
-    margin: 2rem auto;
-  }
-
-  .oss-content {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-body h3 {
-  font-size: 36px !important;
+.cta-section h2 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
   font-family: "Outfit", sans-serif;
 }
 
-/* O elemento onde o texto aparece */
-#typewriter-text {
-  color: #58a6ff; /* Azul neon suave */
-  text-shadow: 0 0 10px rgba(88, 166, 255, 0.5);
+.cta-section p {
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  margin-bottom: 3rem;
 }
 
-/* body .typewriter {
-  border: 5px solid red !important; /* TESTE */
-  font-family: "Courier New", Courier, monospace !important; /* Fonte monoespaçada é essencial para esse efeito */
-} */
-/* O cursor que pisca */
-.cursor {
-  display: inline-block;
-  width: 3px;
-  background-color: #e6edf3;
-  animation: blink 1s infinite;
-  margin-left: 5px;
-  height: 1em; /* Altura relativa ao texto */
-  vertical-align: text-bottom;
+.btn-primary.large {
+  padding: 16px 40px;
+  font-size: 1.2rem;
+}
+
+/* Modern Cool Footer */
+footer {
+  background-color: #050608; /* Mais escuro que o bg-dark */
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 6rem 5% 10rem; /* Espaço para o dock nav embaixo */
+  position: relative;
+  z-index: 5;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 4rem;
+}
+
+.footer-brand h2 {
+  font-family: "Kirens Brush Demo", cursive;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.footer-brand p {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.footer-links h3 {
+  font-size: 1.2rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.footer-links ul {
+  list-style: none;
+}
+
+.footer-links li {
+  margin-bottom: 0.8rem;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.3s;
+  font-size: 0.95rem;
+}
+
+.footer-links a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.footer-socials {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.footer-socials a {
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  transition: transform 0.3s, color 0.3s;
+}
+
+.footer-socials a:hover {
+  color: var(--primary);
+  transform: translateY(-3px);
+}
+
+.ninja-quote {
+  font-family: "Courier New", monospace;
+  font-size: 0.8rem;
+  color: var(--primary);
+  opacity: 0.7;
+  margin-top: 1rem;
 }
 
 /* Animação do cursor */
