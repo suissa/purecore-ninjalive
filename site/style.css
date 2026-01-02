@@ -303,8 +303,11 @@ footer {
   gap: 4rem;
 }
 
+/* Fonts */
+@import url("https://fonts.cdnfonts.com/css/swash-break-trial");
+
 .footer-brand h2 {
-  font-family: "Kirens Brush Demo", cursive;
+  font-family: "Swash Break Trial", cursive;
   font-size: 2rem;
   margin-bottom: 1rem;
   color: var(--primary);
@@ -383,13 +386,13 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Kirens Brush Demo", cursive;
+  font-family: "Swash Break Trial", sans-serif;
   font-weight: 400;
 }
 
 footer h2,
 h3 {
-  font-size: 3rem !important;
+  font-size: 3rem;
 }
 /* Animação do cursor */
 @keyframes blink {
