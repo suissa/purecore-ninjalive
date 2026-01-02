@@ -124,7 +124,70 @@ function init() {
   if (urlRoom) {
     roomInput.value = urlRoom;
     joinRoom();
+  } else {
+    // Animate login entrance if not joining automatically
+    animateLoginEntrance();
   }
+
+  // Initialize interactive effects
+  initElasticElements();
+}
+
+function animateLoginEntrance() {
+  const card = document.querySelector('.login-card');
+  if (!card) return;
+
+  gsap.fromTo(card, 
+    { 
+      z: -1000, 
+      opacity: 0, 
+      scale: 0.2,
+      rotationX: -45
+    },
+    { 
+      z: 0, 
+      opacity: 1, 
+      scale: 1,
+      rotationX: 0,
+      duration: 1.5,
+      ease: "elastic.out(1, 0.6)",
+      delay: 0.5
+    }
+  );
+}
+
+function initElasticElements() {
+    const card = document.querySelector('.login-card');
+    if (!card) return;
+
+    card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const rotateX = (y - centerY) / 15;
+        const rotateY = (centerX - x) / 15;
+        
+        gsap.to(card, {
+            rotationX: rotateX,
+            rotationY: rotateY,
+            transformPerspective: 1000,
+            duration: 0.3,
+            ease: "power2.out"
+        });
+    });
+
+    card.addEventListener('mouseleave', () => {
+        gsap.to(card, {
+            rotationX: 0,
+            rotationY: 0,
+            duration: 0.7,
+            ease: "elastic.out(1, 0.5)"
+        });
+    });
 }
 
 async function joinRoom() {

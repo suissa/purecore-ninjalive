@@ -1,12 +1,12 @@
 export const defaultConfig = {
   theme: {
-    primaryColor: "#6366f1",
-    secondaryColor: "#8b5cf6",
-    backgroundColor: "#0f111a",
+    primaryColor: "#138df5",
+    secondaryColor: "#5ac6fc",
+    backgroundColor: "#0d1117",
     fontFamily: "'Outfit', sans-serif",
   },
   branding: {
-    logoUrl: "", // Empty means default icon
+    logoUrl: "/logo-large.png", 
     title: "Segurança ninja",
   },
   analysis: {
@@ -15,12 +15,12 @@ export const defaultConfig = {
 };
 
 export function loadConfig() {
-  const saved = localStorage.getItem("ninja_config");
+  const saved = localStorage.getItem("ninja_config_v2");
   return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
 }
 
 export function saveConfig(config) {
-  localStorage.setItem("ninja_config", JSON.stringify(config));
+  localStorage.setItem("ninja_config_v2", JSON.stringify(config));
   applyTheme(config);
 }
 
@@ -36,10 +36,10 @@ export function applyTheme(config) {
   // Update Logo if custom
   const logoArea = document.querySelector(".logo-area");
   if (logoArea) {
-    if (config.branding.logoUrl) {
-      logoArea.innerHTML = `<img src="${config.branding.logoUrl}" style="max-height: 50px; border-radius: 8px;"> <h1>${config.branding.title}</h1>`;
-    } else {
-      logoArea.innerHTML = `<i class="fa-solid fa-video"></i> <h1>${config.branding.title}</h1>`;
-    }
+    const displayLogo = config.branding.logoUrl || "/logo-large.png";
+    logoArea.innerHTML = `
+      <img src="${displayLogo}" class="login-logo" alt="Logo">
+      <h1 class="branded-title">${config.branding.title}</h1>
+    `;
   }
 }

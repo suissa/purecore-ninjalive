@@ -3,19 +3,19 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   root: '.',
   server: {
-    port: 5555,
+    port: 5566,
     open: true,
     allowedHosts: [
-      'ninjalive.purecore.codes',
-      'ninjalive.suissai.dev',
+      'ninjalive.clan.purecore.codes',
+      'ninjalive.clan.suissai.dev',
       'localhost', '127.0.0.1', '0.0.0.0', '172.26.1.100']
   },
   preview: {
-    port: 5555,
+    port: 5566,
     open: true,
     allowedHosts: [
-      'ninjalive.purecore.codes',
-      'ninjalive.suissai.dev',
+      'ninjalive.clan.purecore.codes',
+      'ninjalive.clan.suissai.dev',
       'localhost', '127.0.0.1', '0.0.0.0', '172.26.1.100']
   }
 });

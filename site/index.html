@@ -17,25 +17,31 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Arizonia&family=Story+Script&family=Smooch&family=Lexend&display=swap');
+      @import url("https://fonts.googleapis.com/css2?family=Arizonia&family=Story+Script&family=Smooch&family=Lexend&display=swap");
       @import url("https://fonts.googleapis.com/css2?family=Iceland&display=swap");
-      
-      .arizonia-regular, h1, h2, h3, h4, h5, h6 {
+      @import url("https://fonts.cdnfonts.com/css/kirens-brush-demo");
+      .arizonia-regular,
+      h1,
+      h2,
+      h3,
+      .arizonia-regular {
         font-family: "Arizonia", cursive;
         font-weight: 400;
         font-style: normal;
       }
-      .smooch-regular, h1, h2, h3, h4, h5, h6 {
+      .smooch-regular {
         font-family: "Smooch", cursive;
         font-weight: 400;
         font-style: normal;
       }
-      .lexend-regular, p, span {
+      .lexend-regular,
+      p,
+      span {
         font-family: "Lexend", cursive;
         font-weight: 400;
         font-style: normal;
       }
-      .story-script-regular, h1 {
+      .story-script-regular {
         font-family: "Story Script", cursive;
         font-weight: 400;
         font-style: normal;
@@ -45,111 +51,261 @@
         font-weight: 400;
         font-style: normal;
       }
+      .kirens-brush-demo-regular,
+      .hero h1 {
+        font-family: "Kirens Brush Demo", cursive !important;
+        font-weight: 400;
+        font-style: normal;
+      }
     </style>
   </head>
   <body>
     <!-- SVG Filter for Ninja Vanish Smoke Effect -->
-    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none">
       <filter id="ninja-smoke">
-        <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="3" result="noise">
-          <animate attributeName="baseFrequency" dur="5s" values="0.012;0.02;0.012" repeatCount="indefinite" />
+        <feTurbulence
+          type="fractalNoise"
+          baseFrequency="0.012"
+          numOctaves="3"
+          result="noise"
+        >
+          <animate
+            attributeName="baseFrequency"
+            dur="5s"
+            values="0.012;0.02;0.012"
+            repeatCount="indefinite"
+          />
         </feTurbulence>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="0" id="smoke-map">
-            <animate id="smoke-anim" attributeName="scale" dur="3s" values="0;100" fill="freeze" begin="indefinite" />
-            <animate id="smoke-reverse" attributeName="scale" dur="1s" values="100;0" fill="freeze" begin="indefinite" />
+        <feDisplacementMap
+          in="SourceGraphic"
+          in2="noise"
+          scale="0"
+          id="smoke-map"
+        >
+          <animate
+            id="smoke-anim"
+            attributeName="scale"
+            dur="3s"
+            values="0;100"
+            fill="freeze"
+            begin="indefinite"
+          />
+          <animate
+            id="smoke-reverse"
+            attributeName="scale"
+            dur="1s"
+            values="100;0"
+            fill="freeze"
+            begin="indefinite"
+          />
         </feDisplacementMap>
       </filter>
     </svg>
 
     <!-- Innovative Navigation -->
     <!-- New Bottom Dock Navigation -->
-    <nav id="main-nav" class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 md:w-[700px] min-w-fit px-2 py-2 rounded-full backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/60 hover:border-white/20 flex items-center gap-1">
-        
-        <!-- Home/Logo - Dock (Desktop & Mobile) -->
-        <button id="dock-home-btn" class="relative left-[20px] flex items-center justify-center w-10 h-10 md:w-10 md:h-10 w-16 h-16 rounded-full hover:bg-white/10 transition-colors group">
-            <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-white/60 group-hover:rotate-180 transition-transform duration-500">
-                <circle cx="12" cy="12" r="2"/>
-                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(45 12 12)"/>
-                <ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-45 12 12)"/>
-            </svg>
-            
+    <nav
+      id="main-nav"
+      class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 md:w-[700px] min-w-fit px-2 py-2 rounded-full backdrop-blur-xl bg-black/40 border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/60 hover:border-white/20 flex items-center gap-1"
+    >
+      <!-- Home/Logo - Dock (Desktop & Mobile) -->
+      <button
+        id="dock-home-btn"
+        class="relative left-[20px] flex items-center justify-center w-10 h-10 md:w-10 md:h-10 w-16 h-16 rounded-full hover:bg-white/10 transition-colors group"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="56"
+          height="56"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="text-white/60 group-hover:rotate-180 transition-transform duration-500"
+        >
+          <circle cx="12" cy="12" r="2" />
+          <ellipse
+            cx="12"
+            cy="12"
+            rx="10"
+            ry="4"
+            transform="rotate(45 12 12)"
+          />
+          <ellipse
+            cx="12"
+            cy="12"
+            rx="10"
+            ry="4"
+            transform="rotate(-45 12 12)"
+          />
+        </svg>
+      </button>
+
+      <!-- Links container (Desktop Only) -->
+      <div class="hidden md:flex w-full justify-center items-center gap-1">
+        <div class="w-[1px] h-6 bg-white/10 mx-1"></div>
+        <a
+          href="#features"
+          class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white"
+          data-i18n="nav_features"
+          >Features</a
+        >
+        <a
+          href="#security"
+          class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white"
+          data-i18n="nav_security"
+          >Security</a
+        >
+        <a
+          href="#comparison"
+          class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white"
+          data-i18n="nav_comparison"
+          >Comparison</a
+        >
+        <a
+          href="#oss"
+          class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white"
+          data-i18n="oss_nav"
+          >Open Source</a
+        >
+      </div>
+
+      <!-- Vertical Divider (Mobile Only) -->
+      <div class="md:hidden w-[1px] h-6 bg-white/10 mx-1"></div>
+
+      <!-- Mobile Menu Trigger -->
+      <div class="md:hidden flex items-center justify-center px-1">
+        <button
+          id="mobile-menu-trigger"
+          class="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 bg-primary/20 border border-primary/30 hover:scale-110"
+        >
+          <svg
+            id="menu-icon-svg"
+            xmlns="http://www.w3.org/2000/svg"
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-primary transition-all duration-500"
+          >
+            <line x1="4" x2="20" y1="12" y2="12" />
+            <line x1="4" x2="20" y1="6" y2="6" />
+            <line x1="4" x2="20" y1="18" y2="18" />
+          </svg>
         </button>
-
-        <!-- Links container (Desktop Only) -->
-        <div class="hidden md:flex w-full justify-center items-center gap-1">
-            <div class="w-[1px] h-6 bg-white/10 mx-1"></div>
-            <a href="#features" class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="nav_features">Features</a>
-            <a href="#security" class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="nav_security">Security</a>
-            <a href="#comparison" class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="nav_comparison">Comparison</a>
-            <a href="#oss" class="nav-dock-link font-body text-lg px-4 py-2 rounded-full transition-all duration-300 relative overflow-hidden group text-white/60 hover:text-white" data-i18n="oss_nav">Open Source</a>
-        </div>
-
-        <!-- Vertical Divider (Mobile Only) -->
-        <div class="md:hidden w-[1px] h-6 bg-white/10 mx-1"></div>
-
-        <!-- Mobile Menu Trigger -->
-        <div class="md:hidden flex items-center justify-center px-1">
-            <button id="mobile-menu-trigger" class="w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 bg-primary/20 border border-primary/30 hover:scale-110">
-                <svg id="menu-icon-svg" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary transition-all duration-500"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-            </button>
-        </div>
+      </div>
     </nav>
 
     <!-- Mobile Menu Overlay -->
-    <div id="mobile-overlay" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500 md:hidden"></div>
+    <div
+      id="mobile-overlay"
+      class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-500 md:hidden"
+    ></div>
 
     <!-- Mobile Menu Slide-up Container -->
-    <div id="mobile-menu-container" class="fixed bottom-24 left-6 right-6 z-40 md:hidden transition-all duration-500 ease-out translate-y-10 opacity-0 pointer-events-none">
-        <div class="bg-black/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 shadow-2xl overflow-hidden">
-            <div class="flex flex-col gap-1">
-                <a href="#features" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="nav_features">
-                    <span class="font-heading text-lg">Features</span>
-                </a>
-                <a href="#security" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="nav_security">
-                    <span class="font-heading text-lg">Security</span>
-                </a>
-                <a href="#comparison" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="nav_comparison">
-                    <span class="font-heading text-lg">Comparison</span>
-                </a>
-                <a href="#oss" class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300" data-i18n="oss_nav">
-                    <span class="font-heading text-lg">Open Source</span>
-                </a>
-                
-                <div class="h-[1px] bg-white/5 my-2"></div>
-                <div class="flex justify-center gap-4 py-2">
-                    <button class="lang-btn text-white/60 hover:text-white" data-lang="pt-br">PT</button>
-                    <span class="text-white/20">|</span>
-                    <button class="lang-btn text-white/60 hover:text-white" data-lang="en">EN</button>
-                </div>
-                <button id="mobile-back-to-top" class="w-full p-4 text-center text-sm font-body text-primary underline-offset-4 hover:underline">
-                    Back to Top
-                </button>
-            </div>
+    <div
+      id="mobile-menu-container"
+      class="fixed bottom-24 left-6 right-6 z-40 md:hidden transition-all duration-500 ease-out translate-y-10 opacity-0 pointer-events-none"
+    >
+      <div
+        class="bg-black/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-4 shadow-2xl overflow-hidden"
+      >
+        <div class="flex flex-col gap-1">
+          <a
+            href="#features"
+            class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300"
+            data-i18n="nav_features"
+          >
+            <span class="font-heading text-lg">Features</span>
+          </a>
+          <a
+            href="#security"
+            class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300"
+            data-i18n="nav_security"
+          >
+            <span class="font-heading text-lg">Security</span>
+          </a>
+          <a
+            href="#comparison"
+            class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300"
+            data-i18n="nav_comparison"
+          >
+            <span class="font-heading text-lg">Comparison</span>
+          </a>
+          <a
+            href="#oss"
+            class="nav-mobile-link flex items-center justify-between w-full p-4 rounded-2xl text-white/60 hover:bg-white/5 hover:translate-x-2 transition-all duration-300"
+            data-i18n="oss_nav"
+          >
+            <span class="font-heading text-lg">Open Source</span>
+          </a>
+
+          <div class="h-[1px] bg-white/5 my-2"></div>
+          <div class="flex justify-center gap-4 py-2">
+            <button
+              class="lang-btn text-white/60 hover:text-white"
+              data-lang="pt-br"
+            >
+              PT
+            </button>
+            <span class="text-white/20">|</span>
+            <button
+              class="lang-btn text-white/60 hover:text-white"
+              data-lang="en"
+            >
+              EN
+            </button>
+          </div>
+          <button
+            id="mobile-back-to-top"
+            class="w-full p-4 text-center text-sm font-body text-primary underline-offset-4 hover:underline"
+          >
+            Back to Top
+          </button>
         </div>
+      </div>
     </div>
-
-
 
     <!-- Hero Section -->
     <section class="hero pt-4 md:pt-12" id="home">
       <div class="hero-content" data-aos="fade-up">
-        <div class="hidden md:inline-block badge-new" data-i18n="hero_badge">Version 1.0 Available</div>
+        <div class="hidden md:inline-block badge-new" data-i18n="hero_badge">
+          Version 1.0 Available
+        </div>
         <h1 data-i18n="hero_title">Invisible.<br />Secure.<br />Limitless.</h1>
         <p class="hidden md:block" data-i18n="hero_desc">
           The first P2P Video Call System that respects your privacy. No servers
           recorded your data. No sign-ups needed.
         </p>
         <div class="hero-btns">
-          <a href="https://ninjalive.clan.purecore.codes" class="hidden md:inline-block btn-primary">
-            <i class="fa-solid fa-rocket"></i> <span data-i18n="hero_btn_start">Start Instant Meeting</span>
+          <a
+            href="https://ninjalive.clan.purecore.codes"
+            class="hidden md:inline-block btn-primary"
+          >
+            <i class="fa-solid fa-rocket"></i>
+            <span data-i18n="hero_btn_start">Start Instant Meeting</span>
           </a>
-          <a href="https://ninjalive.clan.purecore.codes" class="inline-block md:hidden btn-primary">
+          <a
+            href="https://ninjalive.clan.purecore.codes"
+            class="inline-block md:hidden btn-primary"
+          >
             <i class="fa-solid fa-rocket"></i> <span>Start</span>
           </a>
-          <a href="#features" class="btn-secondary" data-i18n="hero_btn_more">Learn More</a>
+          <a href="#features" class="btn-secondary" data-i18n="hero_btn_more"
+            >Learn More</a
+          >
         </div>
       </div>
-      <div class="hero-visual flex items-center justify-center" data-aos="fade-left">
+      <div
+        class="hero-visual flex items-center justify-center"
+        data-aos="fade-left"
+      >
         <div class="blob-hero"></div>
         <img src="logo-ninja.png" alt="Ninja Mascot" class="mascot-float" />
       </div>
@@ -158,8 +314,12 @@
     <!-- Features Section -->
     <section id="features" class="features-section !pt-8">
       <div class="section-header pb-8" data-aos="fade-up">
-        <h2 class="smooch-regular text-4xl" data-i18n="features_title">Ninja Features</h2>
-        <p class="subtitle" data-i18n="features_subtitle">Everything you need for productive and private meetings.</p>
+        <h2 class="smooch-regular text-4xl" data-i18n="features_title">
+          Ninja Features
+        </h2>
+        <p class="subtitle" data-i18n="features_subtitle">
+          Everything you need for productive and private meetings.
+        </p>
       </div>
 
       <div class="features-grid">
@@ -167,52 +327,64 @@
           <div class="icon-box"><i class="fa-solid fa-circle-nodes"></i></div>
           <h3 data-i18n="feat_mesh_title">P2P Mesh Network</h3>
           <p data-i18n="feat_mesh_desc">
-            Direct connections between participants, ensuring low latency and maximum privacy.
+            Direct connections between participants, ensuring low latency and
+            maximum privacy.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
           <div class="icon-box"><i class="fa-solid fa-desktop"></i></div>
           <h3 data-i18n="feat_screen_title">Screen Sharing</h3>
           <p data-i18n="feat_screen_desc">
-            Share presentations or your entire desktop with a single click, in high definition.
+            Share presentations or your entire desktop with a single click, in
+            high definition.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
           <div class="icon-box"><i class="fa-solid fa-comments"></i></div>
           <h3 data-i18n="feat_chat_title">Real-time Chat</h3>
           <p data-i18n="feat_chat_desc">
-            Exchange messages and links during the call. History is wiped as soon as the room closes.
+            Exchange messages and links during the call. History is wiped as
+            soon as the room closes.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
           <div class="icon-box"><i class="fa-solid fa-crown"></i></div>
           <h3 data-i18n="feat_admin_title">Admin Powers</h3>
           <p data-i18n="feat_admin_desc">
-            If you are the room creator, you get special powers: Mute All, Mute specific users, or Kick them out properly.
+            If you are the room creator, you get special powers: Mute All, Mute
+            specific users, or Kick them out properly.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
           <div class="icon-box"><i class="fa-solid fa-file-lines"></i></div>
           <h3 data-i18n="feat_transcribe_title">Audio Transcription</h3>
           <p data-i18n="feat_transcribe_desc">
-            Auto-local transcription with an option to download the full session transcript as a .txt file.
+            Auto-local transcription with an option to download the full session
+            transcript as a .txt file.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
           <div class="icon-box"><i class="fa-solid fa-robot"></i></div>
           <h3 data-i18n="feat_ai_title">Ninja AI Integration</h3>
           <p data-i18n="feat_ai_desc">
-            Connect your own API key to unlock AI chat, real-time translation, advanced transcription, and automatic meeting summaries.
+            Connect your own API key to unlock AI chat, real-time translation,
+            advanced transcription, and automatic meeting summaries.
           </p>
         </div>
       </div>
     </section>
 
     <!-- Security Section -->
-    <section id="security" class="features-section" style="background: var(--bg-dark);">
+    <section
+      id="security"
+      class="features-section"
+      style="background: var(--bg-dark)"
+    >
       <div class="section-header" data-aos="fade-up">
         <h2 data-i18n="security_title">Why Segurança ninja?</h2>
-        <p class="subtitle" data-i18n="security_subtitle">Designed for the security-conscious.</p>
+        <p class="subtitle" data-i18n="security_subtitle">
+          Designed for the security-conscious.
+        </p>
       </div>
 
       <div class="features-grid">
@@ -252,14 +424,16 @@
             <thead>
               <tr>
                 <th data-i18n="comp_feat">Feature</th>
-                 <th class="ninja-col">Segurança ninja</th>
+                <th class="ninja-col">Segurança ninja</th>
                 <th>Zoom / GMeet</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td data-i18n="comp_data">Data Storage</td>
-                <td class="highlight" data-i18n="comp_data_ninja">Zero (P2P) 🟢</td>
+                <td class="highlight" data-i18n="comp_data_ninja">
+                  Zero (P2P) 🟢
+                </td>
                 <td data-i18n="comp_data_others">Cloud Servers 🔴</td>
               </tr>
               <tr>
@@ -269,27 +443,37 @@
               </tr>
               <tr>
                 <td data-i18n="comp_cost">Cost</td>
-                <td class="highlight" data-i18n="comp_cost_ninja">Free & Open Source 🟢</td>
+                <td class="highlight" data-i18n="comp_cost_ninja">
+                  Free & Open Source 🟢
+                </td>
                 <td data-i18n="comp_cost_others">Freemium / Paid 🟡</td>
               </tr>
               <tr>
                 <td data-i18n="comp_enc">Encryption</td>
-                <td class="highlight" data-i18n="comp_enc_ninja">End-to-End (Direct) 🟢</td>
+                <td class="highlight" data-i18n="comp_enc_ninja">
+                  End-to-End (Direct) 🟢
+                </td>
                 <td data-i18n="comp_enc_others">Server-Decrypted (Often) 🟡</td>
               </tr>
               <tr>
                 <td data-i18n="comp_tracking">Tracking / Ads</td>
-                <td class="highlight" data-i18n="comp_tracking_ninja">Absolutely None 🟢</td>
+                <td class="highlight" data-i18n="comp_tracking_ninja">
+                  Absolutely None 🟢
+                </td>
                 <td data-i18n="comp_tracking_others">Extensive 🔴</td>
               </tr>
               <tr>
                 <td data-i18n="comp_logs">Activity Logs</td>
-                <td class="highlight" data-i18n="comp_logs_ninja">None (Ephemeral) 🟢</td>
+                <td class="highlight" data-i18n="comp_logs_ninja">
+                  None (Ephemeral) 🟢
+                </td>
                 <td data-i18n="comp_logs_others">Stored for Metadata 🔴</td>
               </tr>
               <tr>
                 <td data-i18n="comp_open">Transparency</td>
-                <td class="highlight" data-i18n="comp_open_ninja">Open Source (OSS) 🟢</td>
+                <td class="highlight" data-i18n="comp_open_ninja">
+                  Open Source (OSS) 🟢
+                </td>
                 <td data-i18n="comp_open_others">Black Box (Proprietary) 🔴</td>
               </tr>
             </tbody>
@@ -304,11 +488,27 @@
         <div class="oss-content">
           <div class="oss-text">
             <h2 data-i18n="oss_title">Free & Open Source</h2>
-            <p class="subtitle" data-i18n="oss_subtitle">Build your own meeting system.</p>
-            <p data-i18n="oss_desc1">Segurança ninja is 100% open source. You can clone the repository, modify it, and use it however you like, including for commercial projects.</p>
-            <p data-i18n="oss_desc2">The only condition is to keep the <strong>'Powered by Segurança ninja'</strong> credit with a link to our original repository. We want to encourage the creation of secure meeting systems without heavy infrastructure!</p>
-            <a href="https://github.com/suissa/purecore-ninjalive" target="_blank" class="btn-secondary">
-              <i class="fa-brands fa-github"></i> <span data-i18n="oss_btn">View Repository on GitHub</span>
+            <p class="subtitle" data-i18n="oss_subtitle">
+              Build your own meeting system.
+            </p>
+            <p data-i18n="oss_desc1">
+              Segurança ninja is 100% open source. You can clone the repository,
+              modify it, and use it however you like, including for commercial
+              projects.
+            </p>
+            <p data-i18n="oss_desc2">
+              The only condition is to keep the
+              <strong>'Powered by Segurança ninja'</strong> credit with a link
+              to our original repository. We want to encourage the creation of
+              secure meeting systems without heavy infrastructure!
+            </p>
+            <a
+              href="https://github.com/suissa/purecore-ninjalive"
+              target="_blank"
+              class="btn-secondary"
+            >
+              <i class="fa-brands fa-github"></i>
+              <span data-i18n="oss_btn">View Repository on GitHub</span>
             </a>
           </div>
           <div class="oss-visual">
@@ -327,13 +527,19 @@ npm run dev</code></pre>
     <section class="cta-section" data-aos="fade-up">
       <h2 data-i18n="cta_title">Ready to go dark?</h2>
       <p data-i18n="cta_desc">Start a secure meeting in seconds.</p>
-      <a href="https://ninjalive.clan.purecore.codes" class="btn-primary large" data-i18n="cta_btn">
+      <a
+        href="https://ninjalive.clan.purecore.codes"
+        class="btn-primary large"
+        data-i18n="cta_btn"
+      >
         Launch Segurança ninja
       </a>
     </section>
 
     <footer>
-      <p data-i18n="footer_text">&copy; 2026 Segurança ninja. Open Source Project.</p>
+      <p data-i18n="footer_text">
+        &copy; 2026 Segurança ninja. Open Source Project.
+      </p>
     </footer>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
