@@ -304,10 +304,11 @@ footer {
 }
 
 /* Fonts */
-@import url("https://fonts.cdnfonts.com/css/swash-break-trial");
+/* Fonts */
+@import url("https://fonts.cdnfonts.com/css/road-rage");
 
 .footer-brand h2 {
-  font-family: "Swash Break Trial", cursive;
+  font-family: "Road Rage", cursive;
   font-size: 2rem;
   margin-bottom: 1rem;
   color: var(--primary);
@@ -380,14 +381,13 @@ footer {
   margin-top: 1rem;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: "Swash Break Trial", sans-serif;
+/* Updated Selector for Feature Titles */
+.feature-card h3 {
+  font-family: "Road Rage", cursive;
+  font-size: 4rem !important; /* Increased as requested */
   font-weight: 400;
+  line-height: 1; /* Better spacing for large display fonts */
+  margin-bottom: 1rem;
 }
 
 footer h2,
