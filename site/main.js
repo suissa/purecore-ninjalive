@@ -131,15 +131,55 @@ if (homeBtn) {
   homeBtn.addEventListener("click", () => lenis.scrollTo(0));
 }
 
-// Handle clicks for all navigation links
+// Handle clicks for all navigation links - ELASTIC NAVIGATION WITH DYNAMIC OVERSHOOT
 [...dockLinks, ...mobileLinks].forEach(link => {
   link.addEventListener("click", (e) => {
     e.preventDefault();
     const targetId = link.getAttribute("href");
     const targetElement = document.querySelector(targetId);
+    
     if (targetElement) {
-      lenis.scrollTo(targetElement, { offset: -20 });
+      const targetPos = targetElement.offsetTop - 20;
+      const currentPos = window.scrollY;
+      const distance = Math.abs(targetPos - currentPos);
+      const direction = targetPos > currentPos ? 1 : -1;
+      
+      // --- HARDCORE ELASTIC SCROLL ---
+      // Distância e direção
+      const pullMagnitude = Math.min(200, distance * 0.3);
+      const bounceMagnitude = Math.min(100, distance * 0.1); 
+      const duration = 0.8 + (distance / 2000);
+
+      // Timeline principal
+      const tl = gsap.timeline({
+        onStart: () => lenis.stop(),
+        onComplete: () => {
+          lenis.start();
+          // Sincroniza o Lenis com a posição final
+          lenis.scrollTo(window.scrollY, { immediate: true });
+        }
+      });
+
+      // 1. Puxão (Anticipation) - Curto e seco
+      tl.to(window, {
+        scrollTo: currentPos - (direction * pullMagnitude),
+        duration: 0.3,
+        ease: "power2.out"
+      })
+      // 2. Disparo e Ultrapassagem (Overshoot)
+      .to(window, {
+        scrollTo: targetPos + (direction * bounceMagnitude),
+        duration: duration * 0.7,
+        ease: "power2.in"
+      })
+      // 3. O Rebote Elástico (The Snap Back)
+      .to(window, {
+        scrollTo: targetPos,
+        duration: duration * 0.5,
+        ease: "elastic.out(1, 0.3)"
+      });
     }
+    
     if (isMobileMenuOpen) toggleMobileMenu(false);
   });
 });
