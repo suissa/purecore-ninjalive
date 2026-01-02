@@ -89,9 +89,7 @@ body {
   font-size: 7rem;
   line-height: 1.1;
   margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, #fff, #94a3b8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #fff;
 }
 
 .hero-content p {
@@ -154,8 +152,13 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-30px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
 }
 
 /* Features */
@@ -209,7 +212,8 @@ body {
   overflow: hidden;
 }
 
-.comparison-table th, .comparison-table td {
+.comparison-table th,
+.comparison-table td {
   padding: 1.5rem;
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -240,7 +244,7 @@ body {
   padding: 2rem;
   border-radius: 15px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
 }
 
 /* Dock Helpers */
@@ -249,8 +253,8 @@ body {
 }
 
 .nav-dock-link.text-primary {
-  background: rgba(90, 198, 252, 0.1)!important;
-  font-weight: 700!important;
+  background: rgba(90, 198, 252, 0.1) !important;
+  font-weight: 700 !important;
 }
 
 /* Footer & Other Section Fixes */
@@ -292,5 +296,5 @@ footer {
 
 body h3 {
   font-size: 36px !important;
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 }

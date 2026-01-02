@@ -51,11 +51,8 @@ function updateContent(lang) {
   localStorage.setItem("ninja_lang", lang);
   if (typeof AOS !== "undefined") AOS.refresh();
 
-  // Trigger Brush Reveal for the hero title - REMOVED for incremental approach
-  // initBrushReveal('.hero h1');
+  // Trigger Brush Reveal for the hero title - REMOVED
 }
-
-// initBrushReveal function removed to restart effect implementation incrementally
 
 // lang-switcher logic
 document.addEventListener("click", (e) => {
