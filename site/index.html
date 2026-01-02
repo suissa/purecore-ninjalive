@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Segurança ninja - Maximum Privacy Video Calls</title>
+    <link rel="stylesheet" href="style.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link
       rel="stylesheet"
@@ -15,6 +16,7 @@
     />
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style></style>
     <style>
       @import url("https://fonts.cdnfonts.com/css/kirens-brush-demo");
       .kirens-brush-demo-regular,
@@ -24,29 +26,33 @@
         font-style: normal;
       }
 
-      body .typewriter h1 {
-        min-height: 1.2em; /* Altura de uma linha de texto. Ajuste se sua fonte for muito grande */
-        display: flex; /* Garante alinhamento do cursor com o texto */
-        align-items: center;
-        justify-content: center; /* Centraliza o texto e cursor */
-        white-space: nowrap; /* CRUCIAL: Impede que o texto quebre linha e jogue o cursor pra baixo */
-      }
-      /* Garante que o container tenha fundo escuro e texto claro,
-   independente do que aconteceu com o body */
+      /* Container do typewriter */
       .typewriter {
-        color: #e6edf3; /* Texto claro forçado */
-        padding: 20px; /* Um pouco de espaço se o reset sumiu */
-        display: inline-block; /* Garante que o fundo envolva o texto */
-        border-radius: 8px; /* Estilo opcional */
-        height: 3rem;
+        color: #ffffff;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 80px; /* Altura fixa garantida para evitar pulos */
+        margin-top: 4rem; /* Mais para baixo */
+        margin-bottom: 2rem; /* Espaço para o logo */
       }
+
+      body .typewriter h1 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+      }
+
       .cursor {
         display: inline-block;
         margin-left: 2px;
         width: 3px;
-        /* Se o cursor estiver sumindo, garanta que ele tem altura */
         height: 1em;
-        background-color: #e6edf3; /* Garante a cor */
+        background-color: #ffffff;
+        animation: blink 1s infinite;
       }
 
       /* O cursor e o texto */
@@ -54,7 +60,10 @@
       #typewriter-text {
         font-size: 48px !important;
         font-family: "Courier New", Courier, monospace !important;
-        margin: 0; /* Previne pulos estranhos sem o reset */
+        font-weight: bold !important; /* Bold */
+        color: #ffffff !important; /* Branco */
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* Brilho suave branco opcional */
+        margin: 0;
       }
     </style>
   </head>
@@ -280,6 +289,13 @@
           </h1>
         </div>
       </div>
+      <div
+        class="hero-visual flex items-center justify-center"
+        data-aos="fade-left"
+      >
+        <div class="blob-hero"></div>
+        <img src="logo-ninja.png" alt="Ninja Mascot" class="mascot-float" />
+      </div>
       <div class="hero-content" data-aos="fade-up">
         <!-- <div class="hidden md:inline-block badge-new" data-i18n="hero_badge">
           Version 1.0 Available
@@ -308,13 +324,6 @@
             >Learn More</a
           >
         </div>
-      </div>
-      <div
-        class="hero-visual flex items-center justify-center"
-        data-aos="fade-left"
-      >
-        <div class="blob-hero"></div>
-        <img src="logo-ninja.png" alt="Ninja Mascot" class="mascot-float" />
       </div>
     </section>
 
