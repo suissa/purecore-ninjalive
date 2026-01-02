@@ -125,7 +125,7 @@ body {
 
 .mascot-float {
   width: 400px;
-  animation: float 6s ease-in-out infinite;
+  animation: float 6s ease-in-out infinite, ninjaSpawn 2s ease-out forwards;
   filter: drop-shadow(0 0 30px rgba(90, 198, 252, 0.3)) blur(0px);
   transition: all 0.4s ease-out; /* Volta rápida */
   cursor: pointer;
@@ -158,6 +158,17 @@ body {
   }
   50% {
     transform: translateY(-30px);
+  }
+}
+
+@keyframes ninjaSpawn {
+  0% {
+    opacity: 0;
+    filter: drop-shadow(0 0 30px rgba(90, 198, 252, 0.3)) blur(100px);
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 30px rgba(90, 198, 252, 0.3)) blur(0px);
   }
 }
 
