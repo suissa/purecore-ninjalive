@@ -12,6 +12,35 @@ const ICE_SERVERS = {
   ],
 };
 
+function generateRandomRoomName() {
+  const adjs = [
+    "silent",
+    "shadow",
+    "swift",
+    "hidden",
+    "dark",
+    "iron",
+    "golden",
+    "ghost",
+    "wind",
+  ];
+  const nouns = [
+    "ninja",
+    "blade",
+    "shuriken",
+    "dojo",
+    "kunai",
+    "dragon",
+    "tiger",
+    "lotus",
+    "smoke",
+  ];
+  const adj = adjs[Math.floor(Math.random() * adjs.length)];
+  const noun = nouns[Math.floor(Math.random() * nouns.length)];
+  const num = Math.floor(Math.random() * 1000);
+  return `${adj}-${noun}-${num}`;
+}
+
 // DOM Elements
 const loginScreen = document.getElementById("login-screen");
 const callScreen = document.getElementById("call-screen");
@@ -131,6 +160,16 @@ function init() {
 
   // Initialize interactive effects
   initElasticElements();
+
+  // Set random room name if empty
+  if (!roomInput.value || roomInput.value === "Room Name") {
+    roomInput.value = generateRandomRoomName();
+  }
+
+  // Select all text on focus for easy replacement
+  roomInput.addEventListener("focus", function () {
+    this.select();
+  });
 }
 
 function animateLoginEntrance() {

@@ -203,12 +203,16 @@ body {
   gap: 0.8rem;
   margin-top: 0.5rem;
   box-shadow: 0 10px 20px -10px rgba(19, 141, 245, 0.5);
-}
 
-.primary-btn:hover {
   background: var(--primary-hover);
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 15px 30px -10px rgba(19, 141, 245, 0.6);
+}
+
+.primary-btn:hover {
+  background: var(--primary-color);
+  transform: translateY(0) scale(1);
+  box-shadow: none;
 }
 
 .primary-btn:active {
@@ -580,4 +584,40 @@ body {
 
 h1.branded-title {
   color: #0999fb;
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+input {
+  background-color: #141f2b;
+  border: none;
+  border-bottom: 2px solid #0999fb;
+  text-align: center;
+  width: 100%;
+  color: #0999fb;
+  margin: 0 auto;
+  display: block;
+}
+
+.form-group__ {
+  width: 160px;
+  text-align: center;
+  margin: 0 auto;
+}
+.form-group__ i {
+  opacity: 0.3;
+  margin-top: 20px;
+}
+.form-group__ input {
+  padding-top: 20px;
+  opacity: 0.5;
+  outline: none;
+}
+.form-group__ input.focus {
+  opacity: 1;
+}
+.form-group__ input:focus {
+  opacity: 1;
 }
