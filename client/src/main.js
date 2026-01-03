@@ -209,6 +209,17 @@ function initElasticElements() {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    // Only interact if in top 40%
+    if (y > rect.height * 0.4) {
+      gsap.to(card, {
+        rotationX: 0,
+        rotationY: 0,
+        duration: 0.5,
+        ease: "power2.out",
+      });
+      return;
+    }
+
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
