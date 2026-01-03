@@ -138,11 +138,15 @@ function init() {
   });
 
   // Transcript Handlers
-  downloadTranscriptBtn.addEventListener("click", downloadTranscript);
+  if (downloadTranscriptBtn) {
+    downloadTranscriptBtn.addEventListener("click", downloadTranscript);
+  }
   initTranscription();
 
   // Analysis & Settings Handlers
-  analysisBtn.addEventListener("click", toggleAnalysis);
+  if (analysisBtn) {
+    analysisBtn.addEventListener("click", toggleAnalysis);
+  }
   settingsBtn.addEventListener("click", openSettings);
   closeSettingsBtn.addEventListener("click", closeSettings);
   saveConfigBtn.addEventListener("click", saveSettings);
