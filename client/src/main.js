@@ -166,9 +166,9 @@ function init() {
     roomInput.value = generateRandomRoomName();
   }
 
-  // Select all text on focus for easy replacement
+  // Clear input on focus for easy replacement
   roomInput.addEventListener("focus", function () {
-    this.select();
+    this.value = "";
   });
 }
 
