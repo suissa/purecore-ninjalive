@@ -219,6 +219,7 @@ function initElasticElements() {
       rotationX: rotateX,
       rotationY: rotateY,
       transformPerspective: 1000,
+      transformOrigin: "center bottom",
       duration: 0.3,
       ease: "power2.out",
     });
