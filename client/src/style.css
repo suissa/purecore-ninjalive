@@ -210,7 +210,7 @@ body {
 }
 
 .primary-btn:hover {
-  background: var(--primary-color);
+  background: transparent;
   transform: translateY(0) scale(1);
   box-shadow: none;
 }
