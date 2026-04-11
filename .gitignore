@@ -4,3 +4,8 @@ dist
 .DS_Store
 package-lock.json
 */node_modules
+
+browser-proxy/package-lock.json
+client/package-lock.json
+server/package-lock.json
+site/package-lock.json
