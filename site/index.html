@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ninjalive - Maximum Privacy Video Calls</title>
-    <link rel="stylesheet" href="style.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <link
       rel="stylesheet"
@@ -16,6 +15,7 @@
     />
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css" />
     <style></style>
     <style>
       @import url("https://fonts.cdnfonts.com/css/road-rage");
@@ -132,7 +132,7 @@
       }
     </style>
   </head>
-  <body class="w-full max-w-[1200px] mx-auto">
+  <body class="w-full md:max-w-[1200px] mx-auto overflow-x-hidden">
     <!-- Top Right Language Selector -->
     <div
       id="top-lang-selector"
@@ -367,7 +367,7 @@
 
     <!-- Hero Section -->
     <section class="hero pt-4 md:pt-12" id="home">
-      <div class="container w-[100vw] block">
+      <div class="container w-full block">
         <div class="typewriter">
           <h1>
             <span id="typewriter-text"></span><span class="cursor"></span>
@@ -581,6 +581,59 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile List View (visible only on mobile via CSS) -->
+        <div class="comparison-list-mobile">
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="50">
+            <div class="comp-list-label" data-i18n="comp_data">Data Storage</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_data_ninja">Zero (P2P) 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_data_others">Cloud Servers 🔴</span></div>
+            </div>
+          </div>
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="100">
+            <div class="comp-list-label" data-i18n="comp_login">Login Required</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_login_ninja">Never 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_login_others">Always 🔴</span></div>
+            </div>
+          </div>
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="150">
+            <div class="comp-list-label" data-i18n="comp_cost">Cost</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_cost_ninja">Free & Open Source 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_cost_others">Freemium / Paid 🟡</span></div>
+            </div>
+          </div>
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="200">
+            <div class="comp-list-label" data-i18n="comp_enc">Encryption</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_enc_ninja">End-to-End (Direct) 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_enc_others">Server-Decrypted (Often) 🟡</span></div>
+            </div>
+          </div>
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="250">
+            <div class="comp-list-label" data-i18n="comp_tracking">Tracking / Ads</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_tracking_ninja">Absolutely None 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_tracking_others">Extensive 🔴</span></div>
+            </div>
+          </div>
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="300">
+            <div class="comp-list-label" data-i18n="comp_logs">Activity Logs</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_logs_ninja">None (Ephemeral) 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_logs_others">Stored for Metadata 🔴</span></div>
+            </div>
+          </div>
+          <div class="comp-list-item" data-aos="fade-up" data-aos-delay="350">
+            <div class="comp-list-label" data-i18n="comp_open">Transparency</div>
+            <div class="comp-list-values">
+              <div class="comp-list-ninja"><span data-i18n="comp_open_ninja">Open Source (OSS) 🟢</span></div>
+              <div class="comp-list-others"><span data-i18n="comp_open_others">Black Box (Proprietary) 🔴</span></div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

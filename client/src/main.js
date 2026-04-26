@@ -114,6 +114,23 @@ function init() {
   applyTheme(appConfig);
 
   joinBtn.addEventListener("click", joinRoom);
+  
+  // Password Toggle Handler
+  const togglePasswordBtn = document.getElementById("toggle-password");
+  if (togglePasswordBtn) {
+    togglePasswordBtn.addEventListener("click", () => {
+      const type = roomPassword.getAttribute("type") === "password" ? "text" : "password";
+      roomPassword.setAttribute("type", type);
+      togglePasswordBtn.classList.toggle("visible");
+      
+      const icon = togglePasswordBtn.querySelector("i");
+      if (type === "text") {
+        icon.classList.replace("fa-user-ninja", "fa-eye");
+      } else {
+        icon.classList.replace("fa-eye", "fa-user-ninja");
+      }
+    });
+  }
 
   // Controls Handlers
   audioBtn.addEventListener("click", toggleAudio);

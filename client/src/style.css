@@ -602,9 +602,12 @@ input {
 }
 
 .form-group__ {
-  width: 160px;
+  width: 200px;
   text-align: center;
   margin: 0 auto;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  
+  font-size: 1rem;
 }
 .form-group__ i {
   opacity: 0.3;
@@ -614,10 +617,50 @@ input {
   padding-top: 20px;
   opacity: 0.5;
   outline: none;
+  background: transparent;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1rem;
 }
 .form-group__ input.focus {
   opacity: 1;
+  /* background: #5cbdff; */
+  color: #5cbdff;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1rem;
 }
 .form-group__ input:focus {
   opacity: 1;
+  background: transparent;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1rem;
 }
+
+.password-toggle-btn {
+  position: absolute;
+  right: -30px;
+  top: 18px;
+  background: transparent;
+  border: none;
+  color: #0999fb;
+  cursor: pointer;
+  padding: 5px;
+  opacity: 0.4;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle-btn:hover {
+  opacity: 1;
+  transform: scale(1.3) rotate(360deg);
+  color: #5cbdff;
+}
+
+.password-toggle-btn.visible {
+  opacity: 1;
+  color: #5cbdff;
+  filter: drop-shadow(0 0 8px rgba(92, 189, 255, 0.6));
+}
+
