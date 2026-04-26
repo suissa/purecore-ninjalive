@@ -101,13 +101,38 @@
         pointer-events: none;
       }
 
+      .icon-badge-red {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+
+        width: 40px;
+        height: 40px;
+        background-color: transparent;
+        color: #cf1212;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 18px;
+        opacity: 0.9;
+
+        pointer-events: none;
+      }
+
+      body .red {
+        
+        color: #cf1212 !important;
+      }
+
       /* Zona de exclusão do título */
       .feature-title {
         margin-right: 4rem; /* ESSENCIAL */
       }
     </style>
   </head>
-  <body>
+  <body class="w-full max-w-[1200px] mx-auto">
     <!-- Top Right Language Selector -->
     <div
       id="top-lang-selector"
@@ -413,16 +438,21 @@
             maximum privacy.
           </p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
           <div class="icon-badge">
             <i class="fa-solid fa-desktop"></i>
           </div>
 
-          <h3 class="feature-title">Compartilhamento de Tela</h3>
+          <h3
+            class="feature-title bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent"
+            data-i18n="feat_screen_title"
+          >
+            Screen Share
+          </h3>
 
-          <p>
-            Compartilhe apresentações ou seu desktop inteiro com um único
-            clique, em alta definição.
+          <p data-i18n="feat_screen_desc">
+            Share presentations or your entire desktop with a single click, in
+            high definition.
           </p>
         </div>
 
@@ -562,7 +592,7 @@
     >
       <div class="section-header" data-aos="fade-up">
         <h2
-          class="bg-gradient-to-b from-blue-600 to-[#00efff] bg-clip-text text-transparent text-6xl md:text-8xl mb-8 text-center"
+          class="bg-gradient-to-t from-red-400 to-red-800 bg-clip-text text-transparent text-6xl md:text-8xl mb-8 text-center"
           data-i18n="security_title"
         >
           Why ninjalive?
@@ -571,26 +601,26 @@
 
       <div class="features-grid">
         <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
-          <div class="icon-badge"><i class="fa-solid fa-user-secret"></i></div>
-          <h3 data-i18n="feat_anon_title">Total Anonymity</h3>
+          <div class="icon-badge-red"><i class="fa-solid fa-user-secret"></i></div>
+          <h3 data-i18n="feat_anon_title" class="bg-gradient-to-t from-red-400 to-red-800 bg-clip-text text-transparent">Total Anonymity</h3>
           <p data-i18n="feat_anon_desc">
             No account required. Just pick a name and join. Your identity
             remains yours.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
-          <div class="icon-badge"><i class="fa-solid fa-server"></i></div>
-          <h3 data-i18n="feat_serverless_title">Serverless Media</h3>
+          <div class="icon-badge red"><i class="fa-solid fa-server"></i></div>
+          <h3 data-i18n="feat_serverless_title" class="bg-gradient-to-t from-red-400 to-red-800 bg-clip-text text-transparent">Serverless Media</h3>
           <p data-i18n="feat_serverless_desc">
             We use P2P Mesh technology. Video and audio go directly between you
             and your peers. We don't see it.
           </p>
         </div>
         <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
-          <div class="icon-badge">
+          <div class="icon-badge red">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
-          <h3 data-i18n="feat_enc_title">Military Encryption</h3>
+          <h3 data-i18n="feat_enc_title" class="bg-gradient-to-t from-red-400 to-red-800 bg-clip-text text-transparent">Military Encryption</h3>
           <p data-i18n="feat_enc_desc">
             Powered by WebRTC standard encryption (DTLS/SRTP). Secure by
             default.

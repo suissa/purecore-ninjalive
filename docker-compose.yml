@@ -1,0 +1,64 @@
+services:
+  site:
+    build:
+      context: ./site
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./site:/app
+      - /app/node_modules
+    develop:
+      watch:
+        - path: ./site/package.json
+          action: rebuild
+        - path: ./site
+          target: /app
+          action: sync
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "5556:5556"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    develop:
+      watch:
+        - path: ./client/package.json
+          action: rebuild
+        - path: ./client
+          target: /app
+          action: sync
+
+  server:
+    build:
+      context: ./server
+    ports:
+      - "5557:5557"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    develop:
+      watch:
+        - path: ./server/package.json
+          action: rebuild
+        - path: ./server
+          target: /app
+          action: sync
+
+  browser-proxy:
+    build:
+      context: ./browser-proxy
+    ports:
+      - "5558:5558"
+    volumes:
+      - ./browser-proxy:/app
+      - /app/node_modules
+    develop:
+      watch:
+        - path: ./browser-proxy/package.json
+          action: rebuild
+        - path: ./browser-proxy
+          target: /app
+          action: sync

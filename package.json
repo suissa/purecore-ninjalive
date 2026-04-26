@@ -2,11 +2,12 @@
   "name": "seguranca-ninja",
   "version": "0.1.0",
   "scripts": {
-    "install:all": "npm install --prefix client && npm install --prefix server && npm install --prefix browser-proxy",
+    "install:all": "npm install --prefix client && npm install --prefix server && npm install --prefix browser-proxy && npm install --prefix site",
     "build:client": "npm run build --prefix client",
     "postinstall": "npm run install:all && npm run build:client",
     "start": "node server/index.js",
-    "start:proxy": "cd browser-proxy && node index.js"
+    "start:proxy": "cd browser-proxy && node index.js",
+    "docker:dev": "docker compose up --watch"
   },
   "author": "suissa",
   "license": "Cogfulness Ethical License v1.0",

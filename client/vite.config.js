@@ -3,7 +3,8 @@ import { defineConfig } from "vite";
 export default defineConfig({
   root: ".",
   server: {
-    port: 5566,
+    port: 5556,
+    host: true,
     open: true,
     watch: {
       usePolling: true,
@@ -11,25 +12,11 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
-    allowedHosts: [
-      "ninjalive.clan.purecore.codes",
-      "ninjalive.clan.suissai.dev",
-      "localhost",
-      "127.0.0.1",
-      "0.0.0.0",
-      "172.26.1.100",
-    ],
+    allowedHosts: true
   },
   preview: {
-    port: 5566,
+    port: 5556,
     open: true,
-    allowedHosts: [
-      "ninjalive.clan.purecore.codes",
-      "ninjalive.clan.suissai.dev",
-      "localhost",
-      "127.0.0.1",
-      "0.0.0.0",
-      "172.26.1.100",
-    ],
+    allowedHosts: true
   },
 });

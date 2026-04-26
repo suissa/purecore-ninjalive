@@ -4,18 +4,20 @@ export default defineConfig({
   root: '.',
   server: {
     port: 5555,
+    host: true,
     open: true,
-    allowedHosts: [
-      'ninjalive.purecore.codes',
-      'ninjalive.suissai.dev',
-      'localhost', '127.0.0.1', '0.0.0.0', '172.26.1.100']
+    allowedHosts: true,
+    watch: {
+      usePolling: true,
+      interval: 100
+    },
+    hmr: {
+      overlay: true
+    }
   },
   preview: {
     port: 5555,
     open: true,
-    allowedHosts: [
-      'ninjalive.purecore.codes',
-      'ninjalive.suissai.dev',
-      'localhost', '127.0.0.1', '0.0.0.0', '172.26.1.100']
+    allowedHosts: true
   }
 });

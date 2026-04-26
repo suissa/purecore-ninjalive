@@ -17,7 +17,7 @@ export const translations = {
     feat_mesh_title: "Rede Mesh P2P",
     feat_mesh_desc:
       "Conexões diretas entre participantes, garantindo baixa latência e máxima privacidade.",
-    feat_screen_title: "Compartilhamento de Tela",
+    feat_screen_title: "Compartilhe sua Tela",
     feat_screen_desc:
       "Compartilhe apresentações ou seu desktop inteiro com um único clique, em alta definição.",
     feat_chat_title: "Tempo Real",
@@ -61,7 +61,7 @@ export const translations = {
     comp_tracking_ninja: "Absolutamente Zero 🟢",
     comp_tracking_others: "Extensivo 🔴",
     comp_logs: "Logs de Atividade",
-    comp_logs_ninja: "Nenhum (Efemérito) 🟢",
+    comp_logs_ninja: "Nenhum (Efêmero) 🟢",
     comp_logs_others: "Armazenados p/ Metadados 🔴",
     comp_open: "Transparência",
     comp_open_ninja: "Código Aberto (OSS) 🟢",
