@@ -163,7 +163,7 @@ function init() {
   }
 
   // Initialize interactive effects
-  initElasticElements();
+  // initElasticElements();
 
   // Set random room name if empty
   if (!roomInput.value || roomInput.value === "Room Name") {
