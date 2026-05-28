@@ -25,6 +25,11 @@
           <p class="subtitle">Secure, high-quality video calls.</p>
           
           <div class="input-group">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="username-input" placeholder="Your username" autocomplete="name" />
+          </div>
+
+          <div class="input-group">
             <i class="fa-solid fa-hashtag"></i>
             <input type="text" id="room-input" placeholder="Enter Room Name" />
           </div>
@@ -54,7 +59,7 @@
             <div class="video-container local">
               <video id="local-video" autoplay muted playsinline></video>
               <div class="video-overlay">
-                <span class="user-badge">You</span>
+                <span id="local-user-badge" class="user-badge">You</span>
                 <div class="audio-indicator"><i class="fa-solid fa-microphone"></i></div>
               </div>
             </div>
@@ -115,7 +120,9 @@
             <!-- Messages go here -->
           </div>
           <div class="chat-input-wrapper">
-            <input type="text" id="chat-input" placeholder="Type a message..." />
+            <input type="file" id="chat-image-input" class="hidden" accept="image/*" />
+            <button id="attach-image-btn" class="send-btn secondary-send" title="Send image"><i class="fa-solid fa-image"></i></button>
+            <input type="text" id="chat-input" placeholder="Type a message or paste an image..." />
             <button id="send-btn" class="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
         </div>

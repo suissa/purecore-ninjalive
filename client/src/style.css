@@ -232,6 +232,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  z-index: 2;
 }
 
 .user-badge {
@@ -264,6 +265,80 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  background: radial-gradient(circle at center, rgba(99, 102, 241, 0.14), rgba(0, 0, 0, 0.9));
+  text-align: center;
+  z-index: 1;
+}
+
+.video-placeholder i {
+  color: var(--primary-color);
+  font-size: 2.75rem;
+}
+
+.video-container.media-pending video {
+  opacity: 0;
+}
+
+.video-container.media-pending::before {
+  content: "Waiting for camera/mic";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: radial-gradient(circle at center, rgba(99, 102, 241, 0.12), rgba(0, 0, 0, 0.92));
+  text-align: center;
+  padding: 1rem;
+}
+
+.video-container.media-pending .video-placeholder {
+  display: flex;
+}
+
+.video-container.local.media-pending::before {
+  content: "You are in the room. Camera/mic not active.";
+}
+
+.video-container.remote.media-pending::before {
+  content: "";
+}
+
+.message-author {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.35rem;
+  opacity: 0.78;
+}
+
+.chat-image {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.secondary-send {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+}
+
+.secondary-send:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* Controls Dock */
