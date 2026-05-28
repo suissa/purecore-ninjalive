@@ -3,7 +3,8 @@ dist
 .env
 .DS_Store
 package-lock.json
-*/node_modules
+**/node_modules
+**/*.lock
 
 browser-proxy/package-lock.json
 client/package-lock.json
