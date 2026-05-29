@@ -15,24 +15,27 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  maxHttpBufferSize: 8e6
 });
 
-// Store room state: roomId -> Set of socketIds
+// Store room state: roomId -> room metadata and participants
 const rooms = new Map();
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('join-room', ({ roomId, userId, password, limit }) => {
+  socket.on('join-room', ({ roomId, userId, username, password, limit, recordingAllowed }) => {
+    const displayName = (username || userId || 'Guest').toString().trim().slice(0, 40);
     let room = rooms.get(roomId);
 
     // Create room if not exists
     if (!room) {
       room = {
-        users: new Set(),
+        users: new Map(),
         password,
         limit: parseInt(limit) || 5,
+        recordingAllowed: Boolean(recordingAllowed),
         admin: userId // First user is admin
       };
       rooms.set(roomId, room);
@@ -48,14 +51,24 @@ io.on('connection', (socket) => {
       return socket.emit('join-error', 'Invalid password.');
     }
 
+    const existingUsers = [...room.users.entries()].map(([id, user]) => ({
+      userId: id,
+      username: user.username
+    }));
+
     // Join
     socket.join(roomId);
-    room.users.add(userId);
-    console.log(`User ${userId} (${socket.id}) joined room ${roomId}`);
+    room.users.set(userId, { username: displayName, socketId: socket.id });
+    console.log(`User ${displayName} (${userId}/${socket.id}) joined room ${roomId}`);
 
-    // Notify others
-    socket.emit('admin-status', { isAdmin: userId === room.admin }); // Tell user if they are admin
-    socket.to(roomId).emit('user-connected', userId);
+    // Notify participants. The new user receives everyone already in the room so
+    // both devices can create visible participant windows immediately.
+    socket.emit('existing-users', existingUsers);
+    socket.emit('admin-status', {
+      isAdmin: userId === room.admin,
+      recordingAllowed: room.recordingAllowed
+    }); // Tell user if they are admin
+    socket.to(roomId).emit('user-connected', { userId, username: displayName });
 
     // Admin Events
     socket.on('admin-mute-all', () => {
@@ -89,7 +102,7 @@ io.on('connection', (socket) => {
           rooms.delete(roomId);
         } else if (room.admin === userId) {
           // Reassign admin to next available user
-          const nextAdmin = [...room.users][0];
+          const nextAdmin = [...room.users.keys()][0];
           room.admin = nextAdmin;
           // Notify new admin (trickier without direct socket map, but we can broadcast)
           // Ideally we'd map userId -> socketId.
@@ -99,7 +112,7 @@ io.on('connection', (socket) => {
           console.log(`Admin left. New admin: ${nextAdmin}`);
         }
       }
-      socket.to(roomId).emit('user-disconnected', userId);
+      socket.to(roomId).emit('user-disconnected', { userId, username: displayName });
     });
   });
 
@@ -129,7 +142,10 @@ io.on('connection', (socket) => {
 
   // Chat
   socket.on('chat-message', (payload) => {
-    socket.to(payload.roomId).emit('chat-message', payload);
+    socket.to(payload.roomId).emit('chat-message', {
+      ...payload,
+      sender: payload.sender || socket.id
+    });
   });
 });
 

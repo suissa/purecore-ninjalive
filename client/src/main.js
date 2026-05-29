@@ -17,14 +17,29 @@ const loginScreen = document.getElementById('login-screen');
 const callScreen = document.getElementById('call-screen');
 const videoGrid = document.querySelector('.video-grid');
 const localVideo = document.getElementById('local-video');
+const prejoinVideo = document.getElementById('prejoin-video');
+const prejoinName = document.getElementById('prejoin-name');
+const prejoinStatus = document.getElementById('prejoin-status');
+const prejoinStatusIcon = document.getElementById('prejoin-status-icon');
+const prejoinStatusTitle = document.getElementById('prejoin-status-title');
+const prejoinStatusDesc = document.getElementById('prejoin-status-desc');
+const prejoinMicBtn = document.getElementById('prejoin-mic-btn');
+const prejoinCameraBtn = document.getElementById('prejoin-camera-btn');
+const micDevicePill = document.getElementById('mic-device-pill');
+const speakerDevicePill = document.getElementById('speaker-device-pill');
+const cameraDevicePill = document.getElementById('camera-device-pill');
+const usernameInput = document.getElementById('username-input');
 const roomInput = document.getElementById('room-input');
 const roomPassword = document.getElementById('room-password');
 const roomLimit = document.getElementById('room-limit');
+const adminRecordingAllowedInput = document.getElementById('admin-recording-allowed');
 const joinBtn = document.getElementById('join-btn');
 const chatPanel = document.getElementById('chat-panel');
 const chatToggleBtn = document.getElementById('chat-toggle-btn');
 const closeChatBtn = document.getElementById('close-chat');
 const chatInput = document.getElementById('chat-input');
+const chatImageInput = document.getElementById('chat-image-input');
+const attachImageBtn = document.getElementById('attach-image-btn');
 const sendBtn = document.getElementById('send-btn');
 const chatMessages = document.getElementById('chat-messages');
 const unreadBadge = document.getElementById('unread-badge');
@@ -43,14 +58,22 @@ const peers = {}; // userId -> RTCPeerConnection
 const remoteStreams = {}; // userId -> MediaStream
 let roomId;
 let userId;
+let username;
+const participants = {}; // userId -> { username }
 let isScreenSharing = false;
 let mediaRecorder;
 let recordedChunks = [];
 let isChatOpen = false;
 let unreadCount = 0;
+let adminRecordingAllowed = false;
+let audioContext;
+const speakingDetectors = {};
+const SPEAKING_THRESHOLD = 0.035;
+const SPEAKING_HOLD_MS = 250;
 
 // Admin
 let isAdmin = false;
+let recordingAllowedForRoom = false;
 const adminMuteAllBtn = document.getElementById('admin-mute-all');
 
 // Transcript & Analysis
@@ -80,11 +103,16 @@ let appConfig = loadConfig();
 // Initialize
 function init() {
   userId = 'user-' + Math.random().toString(36).substr(2, 9);
+  usernameInput.value = localStorage.getItem('ninja_username') || '';
+  updatePrejoinName();
 
   // Apply initial config
   applyTheme(appConfig);
 
   joinBtn.addEventListener('click', joinRoom);
+  usernameInput.addEventListener('input', updatePrejoinName);
+  prejoinMicBtn.addEventListener('click', togglePrejoinAudio);
+  prejoinCameraBtn.addEventListener('click', togglePrejoinVideo);
 
   // Controls Handlers
   audioBtn.addEventListener('click', toggleAudio);
@@ -97,9 +125,17 @@ function init() {
   chatToggleBtn.addEventListener('click', toggleChat);
   closeChatBtn.addEventListener('click', toggleChat);
   sendBtn.addEventListener('click', sendMessage);
+  attachImageBtn.addEventListener('click', () => chatImageInput.click());
+  chatImageInput.addEventListener('change', () => {
+    const [file] = chatImageInput.files;
+    if (file) sendImageFile(file);
+    chatImageInput.value = '';
+  });
   chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
   });
+  chatInput.addEventListener('paste', handleChatPaste);
+  document.addEventListener('paste', handleChatPaste);
 
   // Admin Handlers
   adminMuteAllBtn.addEventListener('click', () => {
@@ -123,80 +159,223 @@ function init() {
   const urlRoom = urlParams.get('room');
   if (urlRoom) {
     roomInput.value = urlRoom;
-    joinRoom();
   }
+
+  preparePrejoinPreview();
+}
+
+
+function updatePrejoinName() {
+  const fallbackName = 'Your username';
+  if (prejoinName) prejoinName.textContent = usernameInput.value.trim() || fallbackName;
+}
+
+async function preparePrejoinPreview() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    updatePrejoinPermissionState({ hasAudio: false, hasVideo: false, message: 'Media API not supported in this browser.' });
+    return null;
+  }
+
+  const tracks = [];
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    localStream = stream;
+    prejoinVideo.srcObject = stream;
+    updatePrejoinPermissionState({ hasAudio: true, hasVideo: true });
+    return stream;
+  } catch (combinedError) {
+    console.warn('Could not access both camera and microphone:', combinedError);
+  }
+
+  try {
+    const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    tracks.push(...audioStream.getAudioTracks());
+  } catch (audioError) {
+    console.warn('Could not access microphone:', audioError);
+  }
+
+  try {
+    const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+    tracks.push(...videoStream.getVideoTracks());
+  } catch (videoError) {
+    console.warn('Could not access camera:', videoError);
+  }
+
+  localStream = tracks.length ? new MediaStream(tracks) : null;
+  if (prejoinVideo) prejoinVideo.srcObject = localStream;
+  updatePrejoinPermissionState({
+    hasAudio: Boolean(localStream?.getAudioTracks().length),
+    hasVideo: Boolean(localStream?.getVideoTracks().length)
+  });
+
+  return localStream;
+}
+
+function updatePrejoinPermissionState({ hasAudio, hasVideo, message = '' }) {
+  setPermissionControl(prejoinMicBtn, micDevicePill, hasAudio, 'Microphone permission granted', 'Microphone permission missing');
+  setPermissionControl(prejoinCameraBtn, cameraDevicePill, hasVideo, 'Camera permission granted', 'Camera permission missing');
+  setPermissionControl(null, speakerDevicePill, true, 'Audio output ready', 'Audio output unavailable');
+
+  const allReady = hasAudio && hasVideo;
+  const partialReady = hasAudio || hasVideo;
+  prejoinStatus.classList.toggle('ready', allReady);
+  prejoinStatus.classList.toggle('partial', partialReady && !allReady);
+  prejoinStatus.classList.toggle('denied', !partialReady);
+  prejoinStatusIcon.className = allReady ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation';
+
+  if (allReady) {
+    prejoinStatusTitle.textContent = 'Câmera e microfone prontos';
+    prejoinStatusDesc.textContent = 'Suas permissões estão liberadas para entrar na sala.';
+  } else if (!hasVideo && hasAudio) {
+    prejoinStatusTitle.textContent = 'A câmera não foi encontrada';
+    prejoinStatusDesc.textContent = 'Você pode participar com áudio e chat enquanto verifica a câmera.';
+  } else if (hasVideo && !hasAudio) {
+    prejoinStatusTitle.textContent = 'Microfone sem permissão';
+    prejoinStatusDesc.textContent = 'Você pode participar com câmera e chat enquanto verifica o microfone.';
+  } else {
+    prejoinStatusTitle.textContent = 'Câmera e microfone sem permissão';
+    prejoinStatusDesc.textContent = message || 'Libere as permissões ou participe usando apenas o chat.';
+  }
+}
+
+function setPermissionControl(button, pill, isAllowed, allowedLabel, deniedLabel) {
+  [button, pill].filter(Boolean).forEach((element) => {
+    element.classList.toggle('allowed', isAllowed);
+    element.classList.toggle('denied', !isAllowed);
+  });
+
+  if (pill) {
+    const label = pill.querySelector('span');
+    if (label) label.textContent = isAllowed ? allowedLabel : deniedLabel;
+  }
+}
+
+async function togglePrejoinAudio() {
+  const audioTrack = localStream?.getAudioTracks()[0];
+  if (!audioTrack) {
+    await preparePrejoinPreview();
+    return;
+  }
+
+  audioTrack.enabled = !audioTrack.enabled;
+  prejoinMicBtn.classList.toggle('muted', !audioTrack.enabled);
+}
+
+async function togglePrejoinVideo() {
+  const videoTrack = localStream?.getVideoTracks()[0];
+  if (!videoTrack) {
+    await preparePrejoinPreview();
+    return;
+  }
+
+  videoTrack.enabled = !videoTrack.enabled;
+  prejoinVideo.classList.toggle('video-muted', !videoTrack.enabled);
+  prejoinCameraBtn.classList.toggle('muted', !videoTrack.enabled);
 }
 
 async function joinRoom() {
   const roomBase = roomInput.value.trim();
+  username = usernameInput.value.trim() || `Guest ${userId.slice(-4)}`;
+  adminRecordingAllowed = adminRecordingAllowedInput.checked;
+
+  if (!username) return alert('Please enter a username');
   if (!roomBase) return alert('Please enter a room name');
+
+  localStorage.setItem('ninja_username', username);
 
   const urlParams = new URLSearchParams(window.location.search);
   const urlRoom = urlParams.get('room');
 
-  if (urlRoom && (urlRoom === roomBase || urlRoom.startsWith(roomBase + '-'))) {
-    roomId = urlRoom;
-  } else {
-    roomId = `${roomBase}-${Date.now()}`;
-  }
+  // Use the typed/shared room name directly. Previously a timestamp was appended
+  // when typing a room manually, which put the phone and computer into different
+  // rooms even when the visible room name matched.
+  roomId = urlRoom || roomBase;
 
-  // UI Transition
+  participants[userId] = { username };
+  updateLocalParticipant(username);
+
+  // UI Transition happens before camera/mic permissions so the user gets a room
+  // tile and can use chat even if media access is blocked or still pending.
   loginScreen.classList.add('hidden');
   callScreen.classList.remove('hidden');
+  addSystemMessage(`Joined room: ${roomId} as ${username}`);
 
   // Connect Socket
   socket = io(SERVER_URL);
-
   setupSocketListeners();
 
+  socket.emit('join-room', {
+    roomId,
+    userId,
+    username,
+    password: roomPassword.value.trim(),
+    limit: roomLimit.value,
+    recordingAllowed: adminRecordingAllowed
+  });
+
+  const newUrl = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomId)}`;
+  window.history.pushState({ path: newUrl }, '', newUrl);
+
   try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('Media API not supported');
+    if (!localStream) {
+      await preparePrejoinPreview();
     }
 
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    localVideo.srcObject = localStream;
-
-    // Join with settings
-    socket.emit('join-room', {
-      roomId,
-      userId,
-      password: roomPassword.value.trim(),
-      limit: roomLimit.value
-    });
-    addSystemMessage(`Joined room: ${roomId}`);
-
-    const newUrl = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
-    window.history.pushState({ path: newUrl }, '', newUrl);
-
+    if (localStream) {
+      localVideo.srcObject = localStream;
+      updateLocalMediaState(true);
+      startSpeakingDetection(localStream, userId);
+      attachLocalMediaToPeers();
+    } else {
+      throw new Error('Media unavailable');
+    }
   } catch (err) {
     console.error('Error accessing media:', err);
-    alert('Could not access camera/mic. Ensure HTTPS/localhost.');
+    updateLocalMediaState(false);
+    addSystemMessage('Camera/mic unavailable. You can still see the room and use chat.');
   }
 }
 
 function setupSocketListeners() {
-  socket.on('user-connected', (newUserId) => {
+  socket.on('existing-users', (users) => {
+    users.forEach(({ userId: existingUserId, username: existingUsername }) => {
+      participants[existingUserId] = { username: existingUsername };
+      addRemoteParticipant(existingUserId);
+    });
+  });
+
+  socket.on('user-connected', ({ userId: newUserId, username: newUsername }) => {
     console.log('User connected:', newUserId);
-    addSystemMessage(`User ${newUserId.substr(0, 4)} joined`);
+    participants[newUserId] = { username: newUsername };
+    addSystemMessage(`${getDisplayName(newUserId)} joined`);
+    addRemoteParticipant(newUserId);
     connectToNewUser(newUserId, true); // true = initiator
   });
 
-  socket.on('user-disconnected', (disconnectedUserId) => {
+  socket.on('user-disconnected', (payload) => {
+    const disconnectedUserId = typeof payload === 'string' ? payload : payload.userId;
     console.log('User disconnected:', disconnectedUserId);
-    addSystemMessage(`User ${disconnectedUserId.substr(0, 4)} left`);
+    addSystemMessage(`${getDisplayName(disconnectedUserId)} left`);
     if (peers[disconnectedUserId]) {
       peers[disconnectedUserId].close();
       delete peers[disconnectedUserId];
     }
     removeRemoteVideo(disconnectedUserId);
+    delete participants[disconnectedUserId];
   });
 
   socket.on('admin-status', (data) => {
     isAdmin = data.isAdmin;
+    recordingAllowedForRoom = Boolean(data.recordingAllowed);
+    recordBtn.classList.toggle('hidden', !(isAdmin && recordingAllowedForRoom));
+
     if (isAdmin) {
       addSystemMessage('You are the Admin.');
       adminMuteAllBtn.classList.remove('hidden');
+      if (recordingAllowedForRoom) {
+        addSystemMessage('Admin recording is allowed for this room.');
+      }
     }
   });
 
@@ -226,7 +405,11 @@ function setupSocketListeners() {
     if (payload.target && payload.target !== userId) return;
 
     console.log('Received offer from:', payload.caller);
-    await connectToNewUser(payload.caller, false, payload.sdp);
+    if (peers[payload.caller]) {
+      await answerExistingPeerOffer(payload.caller, payload.sdp);
+    } else {
+      await connectToNewUser(payload.caller, false, payload.sdp);
+    }
   });
 
   socket.on('answer', async (payload) => {
@@ -254,7 +437,7 @@ function setupSocketListeners() {
   });
 
   socket.on('chat-message', (data) => {
-    addMessage(data.message, 'theirs');
+    addMessage(data.message, 'theirs', data.username || getDisplayName(data.userId || data.sender));
     if (!isChatOpen) {
       unreadCount++;
       unreadBadge.textContent = unreadCount;
@@ -270,7 +453,23 @@ function setupSocketListeners() {
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop());
     }
+    localStream = null;
     socket.disconnect();
+  });
+}
+
+async function answerExistingPeerOffer(targetUserId, offerSdp) {
+  const peer = peers[targetUserId];
+  if (!peer || !offerSdp) return;
+
+  await peer.setRemoteDescription(new RTCSessionDescription(offerSdp));
+  const answer = await peer.createAnswer();
+  await peer.setLocalDescription(answer);
+  socket.emit('answer', {
+    roomId,
+    target: targetUserId,
+    caller: userId,
+    sdp: answer
   });
 }
 
@@ -280,10 +479,13 @@ async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
   const peer = new RTCPeerConnection(ICE_SERVERS);
   peers[targetUserId] = peer;
 
-  // Add local tracks
-  localStream.getTracks().forEach(track => {
-    peer.addTrack(track, localStream);
-  });
+  // Add local tracks when camera/mic permission is available. Users can still
+  // join, see participant tiles, and chat without granting media permissions.
+  if (localStream) {
+    localStream.getTracks().forEach(track => {
+      peer.addTrack(track, localStream);
+    });
+  }
 
   // Handle remote tracks
   peer.ontrack = (event) => {
@@ -328,71 +530,219 @@ async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
   }
 }
 
-// UI Helpers for Dynamic Video
-function addRemoteVideo(stream, remoteUserId) {
-  let videoContainer = document.getElementById(`container-${remoteUserId}`);
 
-  if (!videoContainer) {
-    videoContainer = document.createElement('div');
-    videoContainer.id = `container-${remoteUserId}`;
-    videoContainer.className = 'video-container remote';
-
-    const video = document.createElement('video');
-    video.id = `video-${remoteUserId}`;
-    video.autoplay = true;
-    video.playsInline = true;
-    video.srcObject = stream;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'video-overlay';
-
-    let adminControls = '';
-    if (isAdmin) {
-      adminControls = `
-            <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
-               <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
-               <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
-            </div>
-          `;
-    }
-
-    overlay.innerHTML = `<span class="user-badge">User ${remoteUserId.substr(0, 4)}</span>${adminControls}`;
-
-    videoContainer.appendChild(video);
-    videoContainer.appendChild(overlay);
-    videoGrid.appendChild(videoContainer);
-
-    remoteStreams[remoteUserId] = stream;
-  } else {
-    const video = videoContainer.querySelector('video');
-    if (video.srcObject !== stream) {
-      video.srcObject = stream;
-    }
+function getSharedAudioContext() {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    audioContext = new AudioContextClass();
   }
+
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch((err) => console.warn('Could not resume audio context:', err));
+  }
+
+  return audioContext;
+}
+
+function startSpeakingDetection(stream, participantId) {
+  const audioTrack = stream?.getAudioTracks?.()[0];
+  if (!audioTrack) {
+    updateSpeakingIndicator(participantId, false);
+    return;
+  }
+
+  stopSpeakingDetection(participantId);
+
+  const context = getSharedAudioContext();
+  if (!context) return;
+
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = 0.35;
+
+  const audioOnlyStream = new MediaStream([audioTrack]);
+  const source = context.createMediaStreamSource(audioOnlyStream);
+  const samples = new Uint8Array(analyser.fftSize);
+  let lastSpokeAt = 0;
+  let animationFrame = null;
+
+  source.connect(analyser);
+
+  const detect = () => {
+    if (!audioTrack.enabled || audioTrack.readyState !== 'live') {
+      updateSpeakingIndicator(participantId, false);
+      animationFrame = requestAnimationFrame(detect);
+      return;
+    }
+
+    analyser.getByteTimeDomainData(samples);
+    let sumSquares = 0;
+    samples.forEach((sample) => {
+      const centered = (sample - 128) / 128;
+      sumSquares += centered * centered;
+    });
+
+    const rms = Math.sqrt(sumSquares / samples.length);
+    const now = performance.now();
+    if (rms > SPEAKING_THRESHOLD) lastSpokeAt = now;
+
+    updateSpeakingIndicator(participantId, now - lastSpokeAt < SPEAKING_HOLD_MS);
+    animationFrame = requestAnimationFrame(detect);
+  };
+
+  speakingDetectors[participantId] = {
+    stop: () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      source.disconnect();
+      updateSpeakingIndicator(participantId, false);
+    }
+  };
+
+  detect();
+}
+
+function stopSpeakingDetection(participantId) {
+  if (!speakingDetectors[participantId]) return;
+  speakingDetectors[participantId].stop();
+  delete speakingDetectors[participantId];
+}
+
+function updateSpeakingIndicator(participantId, isSpeaking) {
+  const indicatorId = participantId === userId ? 'local-speaking-indicator' : `speaking-${participantId}`;
+  const indicator = document.getElementById(indicatorId);
+  if (!indicator) return;
+
+  indicator.classList.toggle('speaking', isSpeaking);
+  indicator.title = isSpeaking ? 'Speaking now' : 'Not speaking';
+}
+
+// UI Helpers for Dynamic Video
+function getDisplayName(participantId) {
+  return participants[participantId]?.username || `User ${participantId.substr(0, 4)}`;
+}
+
+function updateLocalParticipant(displayName) {
+  const badge = document.getElementById('local-user-badge');
+  if (badge) badge.textContent = `${displayName} (You)`;
+  const localContainer = document.querySelector('.video-container.local');
+  if (localContainer) localContainer.classList.add('media-pending');
+}
+
+function updateLocalMediaState(hasMedia) {
+  const localContainer = document.querySelector('.video-container.local');
+  if (!localContainer) return;
+  localContainer.classList.toggle('media-pending', !hasMedia);
+  if (!hasMedia) {
+    localVideo.srcObject = null;
+  }
+}
+
+function addRemoteParticipant(remoteUserId) {
+  let videoContainer = document.getElementById(`container-${remoteUserId}`);
+  if (videoContainer) return videoContainer;
+
+  videoContainer = document.createElement('div');
+  videoContainer.id = `container-${remoteUserId}`;
+  videoContainer.className = 'video-container remote media-pending';
+
+  const video = document.createElement('video');
+  video.id = `video-${remoteUserId}`;
+  video.autoplay = true;
+  video.playsInline = true;
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'video-placeholder';
+  placeholder.innerHTML = `<i class="fa-solid fa-user-ninja"></i><span>Waiting for media</span>`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'video-overlay';
+
+  let adminControls = '';
+  if (isAdmin) {
+    adminControls = `
+          <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
+             <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
+             <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
+          </div>
+        `;
+  }
+
+  overlay.innerHTML = `
+    <span class="user-badge">${getDisplayName(remoteUserId)}</span>
+    <div class="participant-indicators">
+      <div id="speaking-${remoteUserId}" class="audio-indicator speaking-indicator" title="Not speaking"><i class="fa-solid fa-microphone"></i></div>
+    </div>
+    ${adminControls}
+  `;
+
+  videoContainer.appendChild(video);
+  videoContainer.appendChild(placeholder);
+  videoContainer.appendChild(overlay);
+  videoGrid.appendChild(videoContainer);
+  return videoContainer;
+}
+
+function addRemoteVideo(stream, remoteUserId) {
+  const videoContainer = addRemoteParticipant(remoteUserId);
+  const video = videoContainer.querySelector('video');
+  video.srcObject = stream;
+  videoContainer.classList.remove('media-pending');
+  remoteStreams[remoteUserId] = stream;
+  startSpeakingDetection(stream, remoteUserId);
+}
+
+function attachLocalMediaToPeers() {
+  if (!localStream) return;
+
+  Object.entries(peers).forEach(async ([peerId, peer]) => {
+    localStream.getTracks().forEach((track) => {
+      const hasSender = peer.getSenders().some((sender) => sender.track?.kind === track.kind);
+      if (!hasSender) peer.addTrack(track, localStream);
+    });
+
+    try {
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      socket.emit('offer', {
+        roomId,
+        target: peerId,
+        caller: userId,
+        sdp: offer
+      });
+    } catch (err) {
+      console.error('Error renegotiating media with peer:', err);
+    }
+  });
 }
 
 function removeRemoteVideo(remoteUserId) {
   const el = document.getElementById(`container-${remoteUserId}`);
   if (el) el.remove();
+  stopSpeakingDetection(remoteUserId);
   delete remoteStreams[remoteUserId];
 }
 
 // Controls
 function toggleAudio() {
+  if (!localStream) return addSystemMessage('Camera/mic permission is not active yet.');
   const audioTrack = localStream.getAudioTracks()[0];
   if (audioTrack) {
     audioTrack.enabled = !audioTrack.enabled;
     if (audioTrack.enabled) {
       audioBtn.classList.remove('off');
       audioBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+      startSpeakingDetection(localStream, userId);
     } else {
       audioBtn.classList.add('off');
       audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+      updateSpeakingIndicator(userId, false);
     }
   }
 }
 
 function toggleVideo() {
+  if (!localStream) return addSystemMessage('Camera/mic permission is not active yet.');
   const videoTrack = localStream.getVideoTracks()[0];
   if (videoTrack) {
     videoTrack.enabled = !videoTrack.enabled;
@@ -407,6 +757,7 @@ function toggleVideo() {
 }
 
 async function toggleScreenShare() {
+  if (!localStream) return addSystemMessage('Camera/mic permission is required before screen sharing.');
   if (isScreenSharing) {
     // Stop
     const camStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -418,7 +769,7 @@ async function toggleScreenShare() {
 
     // Update all peers
     for (const pid in peers) {
-      const sender = peers[pid].getSenders().find(s => s.track.kind === 'video');
+      const sender = peers[pid].getSenders().find(s => s.track?.kind === 'video');
       if (sender) sender.replaceTrack(videoTrack);
     }
 
@@ -438,7 +789,7 @@ async function toggleScreenShare() {
 
       // Update all peers
       for (const pid in peers) {
-        const sender = peers[pid].getSenders().find(s => s.track.kind === 'video');
+        const sender = peers[pid].getSenders().find(s => s.track?.kind === 'video');
         if (sender) sender.replaceTrack(screenTrack);
       }
 
@@ -452,6 +803,10 @@ async function toggleScreenShare() {
 }
 
 function toggleRecording() {
+  if (!isAdmin || !recordingAllowedForRoom) {
+    return alert('Only the admin can record when admin recording is allowed for this room.');
+  }
+
   const remoteKeys = Object.keys(remoteStreams);
   if (remoteKeys.length === 0) return alert('No one to record.');
 
@@ -491,6 +846,7 @@ function toggleRecording() {
 }
 
 function leaveCall() {
+  Object.keys(speakingDetectors).forEach(stopSpeakingDetection);
   if (socket) socket.disconnect();
   // Close all peers
   for (const pid in peers) {
@@ -515,18 +871,76 @@ function sendMessage() {
   const msg = chatInput.value.trim();
   if (!msg) return;
 
-  if (socket) {
-    socket.emit('chat-message', { roomId, message: msg });
-    addMessage(msg, 'mine');
-    analyzeSpeech(msg); // Self analysis
-    chatInput.value = '';
-  }
+  sendChatPayload({ type: 'text', text: msg });
+  analyzeSpeech(msg); // Self analysis
+  chatInput.value = '';
 }
 
-function addMessage(text, type) {
+function sendChatPayload(message) {
+  if (!socket) return;
+
+  const payload = {
+    roomId,
+    userId,
+    username,
+    message
+  };
+
+  socket.emit('chat-message', payload);
+  addMessage(message, 'mine', username);
+}
+
+function handleChatPaste(e) {
+  if (!socket || !e.clipboardData?.items) return;
+
+  const imageItem = [...e.clipboardData.items].find((item) => item.type.startsWith('image/'));
+  if (!imageItem) return;
+
+  e.preventDefault();
+  const file = imageItem.getAsFile();
+  if (file) sendImageFile(file);
+}
+
+function sendImageFile(file) {
+  if (!file.type.startsWith('image/')) return alert('Please select an image file.');
+  if (file.size > 4 * 1024 * 1024) return alert('Image is too large. Please send an image up to 4 MB.');
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    sendChatPayload({
+      type: 'image',
+      name: file.name || 'pasted-image.png',
+      image: reader.result
+    });
+  };
+  reader.onerror = () => alert('Could not read image.');
+  reader.readAsDataURL(file);
+}
+
+function addMessage(message, type, author = '') {
+  const normalizedMessage = typeof message === 'string' ? { type: 'text', text: message } : message;
   const div = document.createElement('div');
   div.classList.add('message', type);
-  div.textContent = text;
+
+  if (author) {
+    const authorEl = document.createElement('div');
+    authorEl.className = 'message-author';
+    authorEl.textContent = author;
+    div.appendChild(authorEl);
+  }
+
+  if (normalizedMessage.type === 'image') {
+    const img = document.createElement('img');
+    img.className = 'chat-image';
+    img.src = normalizedMessage.image;
+    img.alt = normalizedMessage.name || 'Chat image';
+    div.appendChild(img);
+  } else {
+    const text = document.createElement('span');
+    text.textContent = normalizedMessage.text || '';
+    div.appendChild(text);
+  }
+
   chatMessages.appendChild(div);
 
   chatMessages.scrollTo({
@@ -577,7 +991,7 @@ function initTranscription() {
     };
 
     recognition.onend = () => {
-      if (peerConnection || Object.keys(peers).length > 0) {
+      if (Object.keys(peers).length > 0) {
         try { recognition.start(); } catch (e) { }
       }
     };
@@ -703,6 +1117,7 @@ function muteAudio() {
       audioTrack.enabled = false;
       audioBtn.classList.add('off');
       audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+      updateSpeakingIndicator(userId, false);
     }
   }
 }
