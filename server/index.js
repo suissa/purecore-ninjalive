@@ -25,7 +25,7 @@ const rooms = new Map();
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
-  socket.on('join-room', ({ roomId, userId, username, password, limit }) => {
+  socket.on('join-room', ({ roomId, userId, username, password, limit, recordingAllowed }) => {
     const displayName = (username || userId || 'Guest').toString().trim().slice(0, 40);
     let room = rooms.get(roomId);
 
@@ -35,6 +35,7 @@ io.on('connection', (socket) => {
         users: new Map(),
         password,
         limit: parseInt(limit) || 5,
+        recordingAllowed: Boolean(recordingAllowed),
         admin: userId // First user is admin
       };
       rooms.set(roomId, room);
@@ -63,7 +64,10 @@ io.on('connection', (socket) => {
     // Notify participants. The new user receives everyone already in the room so
     // both devices can create visible participant windows immediately.
     socket.emit('existing-users', existingUsers);
-    socket.emit('admin-status', { isAdmin: userId === room.admin }); // Tell user if they are admin
+    socket.emit('admin-status', {
+      isAdmin: userId === room.admin,
+      recordingAllowed: room.recordingAllowed
+    }); // Tell user if they are admin
     socket.to(roomId).emit('user-connected', { userId, username: displayName });
 
     // Admin Events

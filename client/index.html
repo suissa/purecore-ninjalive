@@ -16,37 +16,85 @@
       <div class="blob blob-2"></div>
 
       <!-- Login / Room Selection -->
-      <div id="login-screen" class="screen">
-        <div class="glass-card login-card">
-          <div class="logo-area">
-            <i class="fa-solid fa-video"></i>
-            <h1>ninjameeting</h1>
-          </div>
-          <p class="subtitle">Secure, high-quality video calls.</p>
-          
-          <div class="input-group">
-            <i class="fa-solid fa-user"></i>
-            <input type="text" id="username-input" placeholder="Your username" autocomplete="name" />
-          </div>
+      <div id="login-screen" class="screen prejoin-screen">
+        <div class="prejoin-shell">
+          <section class="prejoin-preview-card glass-card">
+            <div class="prejoin-preview-top">
+              <strong id="prejoin-name">Your username</strong>
+              <button class="prejoin-menu-btn" aria-label="More options"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </div>
 
-          <div class="input-group">
-            <i class="fa-solid fa-hashtag"></i>
-            <input type="text" id="room-input" placeholder="Enter Room Name" />
-          </div>
+            <video id="prejoin-video" autoplay muted playsinline></video>
 
-          <div class="input-group">
-            <i class="fa-solid fa-lock"></i>
-            <input type="password" id="room-password" placeholder="Password (Optional)" />
-          </div>
+            <div id="prejoin-status" class="prejoin-status denied">
+              <i id="prejoin-status-icon" class="fa-solid fa-circle-exclamation"></i>
+              <div>
+                <h2 id="prejoin-status-title">Checking camera and microphone...</h2>
+                <p id="prejoin-status-desc">Allow permissions to preview your devices before joining.</p>
+              </div>
+            </div>
 
-          <div class="input-group">
-            <i class="fa-solid fa-users"></i>
-            <input type="number" id="room-limit" placeholder="Max Users (Default 5)" min="2" max="20" value="5" />
+            <div class="prejoin-preview-controls">
+              <button id="prejoin-mic-btn" class="prejoin-control-btn denied" title="Microphone permission">
+                <i class="fa-solid fa-microphone"></i>
+                <span class="permission-dot"><i class="fa-solid fa-exclamation"></i></span>
+              </button>
+              <button id="prejoin-camera-btn" class="prejoin-control-btn denied" title="Camera permission">
+                <i class="fa-solid fa-video"></i>
+                <span class="permission-dot"><i class="fa-solid fa-exclamation"></i></span>
+              </button>
+              <button id="prejoin-avatar-btn" class="prejoin-control-btn neutral" title="Profile">
+                <i class="fa-solid fa-id-card-clip"></i>
+              </button>
+            </div>
+          </section>
+
+          <aside class="prejoin-side glass-card">
+            <div class="logo-area prejoin-logo">
+              <i class="fa-solid fa-video"></i>
+              <h1>ninjameeting</h1>
+            </div>
+            <h2>Pronto para participar?</h2>
+            <p class="subtitle">Confira seus dados, permissões e entre na sala com segurança.</p>
+
+            <div class="input-group">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" id="username-input" placeholder="Your username" autocomplete="name" />
+            </div>
+
+            <div class="input-group">
+              <i class="fa-solid fa-hashtag"></i>
+              <input type="text" id="room-input" placeholder="Enter Room Name" />
+            </div>
+
+            <div class="prejoin-options-grid">
+              <div class="input-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="room-password" placeholder="Password (Optional)" />
+              </div>
+
+              <div class="input-group">
+                <i class="fa-solid fa-users"></i>
+                <input type="number" id="room-limit" placeholder="Max Users" min="2" max="20" value="5" />
+              </div>
+            </div>
+
+            <label class="recording-permission-toggle">
+              <input type="checkbox" id="admin-recording-allowed" />
+              <span class="toggle-ui"><i class="fa-solid fa-record-vinyl"></i></span>
+              <span>Permitir gravação pelo Admin</span>
+            </label>
+
+            <button id="join-btn" class="primary-btn prejoin-join-btn">
+              Pedir para participar <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </aside>
+
+          <div class="prejoin-device-pills">
+            <button id="mic-device-pill" class="device-pill denied"><i class="fa-solid fa-microphone"></i><span>Permissão do microfone</span><i class="fa-solid fa-caret-down"></i></button>
+            <button id="speaker-device-pill" class="device-pill neutral"><i class="fa-solid fa-volume-high"></i><span>Saída de áudio</span><i class="fa-solid fa-caret-down"></i></button>
+            <button id="camera-device-pill" class="device-pill denied"><i class="fa-solid fa-video"></i><span>Permissão da câmera</span><i class="fa-solid fa-caret-down"></i></button>
           </div>
-          
-          <button id="join-btn" class="primary-btn">
-            Join Call <i class="fa-solid fa-arrow-right"></i>
-          </button>
         </div>
       </div>
 
@@ -60,7 +108,7 @@
               <video id="local-video" autoplay muted playsinline></video>
               <div class="video-overlay">
                 <span id="local-user-badge" class="user-badge">You</span>
-                <div class="audio-indicator"><i class="fa-solid fa-microphone"></i></div>
+                <div id="local-speaking-indicator" class="audio-indicator speaking-indicator" title="Not speaking"><i class="fa-solid fa-microphone"></i></div>
               </div>
             </div>
 
@@ -80,7 +128,7 @@
             <i class="fa-solid fa-desktop"></i>
           </button>
           <div class="divider"></div>
-          <button id="record-btn" class="control-btn" title="Record">
+          <button id="record-btn" class="control-btn hidden" title="Record">
             <i class="fa-solid fa-record-vinyl"></i>
           </button>
           <button id="chat-toggle-btn" class="control-btn" title="Chat">
