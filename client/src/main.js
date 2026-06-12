@@ -17,10 +17,22 @@ const loginScreen = document.getElementById('login-screen');
 const callScreen = document.getElementById('call-screen');
 const videoGrid = document.querySelector('.video-grid');
 const localVideo = document.getElementById('local-video');
+const prejoinVideo = document.getElementById('prejoin-video');
+const prejoinName = document.getElementById('prejoin-name');
+const prejoinStatus = document.getElementById('prejoin-status');
+const prejoinStatusIcon = document.getElementById('prejoin-status-icon');
+const prejoinStatusTitle = document.getElementById('prejoin-status-title');
+const prejoinStatusDesc = document.getElementById('prejoin-status-desc');
+const prejoinMicBtn = document.getElementById('prejoin-mic-btn');
+const prejoinCameraBtn = document.getElementById('prejoin-camera-btn');
+const micDevicePill = document.getElementById('mic-device-pill');
+const speakerDevicePill = document.getElementById('speaker-device-pill');
+const cameraDevicePill = document.getElementById('camera-device-pill');
 const usernameInput = document.getElementById('username-input');
 const roomInput = document.getElementById('room-input');
 const roomPassword = document.getElementById('room-password');
 const roomLimit = document.getElementById('room-limit');
+const adminRecordingAllowedInput = document.getElementById('admin-recording-allowed');
 const joinBtn = document.getElementById('join-btn');
 const chatPanel = document.getElementById('chat-panel');
 const chatToggleBtn = document.getElementById('chat-toggle-btn');
@@ -53,9 +65,15 @@ let mediaRecorder;
 let recordedChunks = [];
 let isChatOpen = false;
 let unreadCount = 0;
+let adminRecordingAllowed = false;
+let audioContext;
+const speakingDetectors = {};
+const SPEAKING_THRESHOLD = 0.035;
+const SPEAKING_HOLD_MS = 250;
 
 // Admin
 let isAdmin = false;
+let recordingAllowedForRoom = false;
 const adminMuteAllBtn = document.getElementById('admin-mute-all');
 
 // Transcript & Analysis
@@ -86,11 +104,15 @@ let appConfig = loadConfig();
 function init() {
   userId = 'user-' + Math.random().toString(36).substr(2, 9);
   usernameInput.value = localStorage.getItem('ninja_username') || '';
+  updatePrejoinName();
 
   // Apply initial config
   applyTheme(appConfig);
 
   joinBtn.addEventListener('click', joinRoom);
+  usernameInput.addEventListener('input', updatePrejoinName);
+  prejoinMicBtn.addEventListener('click', togglePrejoinAudio);
+  prejoinCameraBtn.addEventListener('click', togglePrejoinVideo);
 
   // Controls Handlers
   audioBtn.addEventListener('click', toggleAudio);
@@ -137,13 +159,125 @@ function init() {
   const urlRoom = urlParams.get('room');
   if (urlRoom) {
     roomInput.value = urlRoom;
-    joinRoom();
   }
+
+  preparePrejoinPreview();
+}
+
+
+function updatePrejoinName() {
+  const fallbackName = 'Your username';
+  if (prejoinName) prejoinName.textContent = usernameInput.value.trim() || fallbackName;
+}
+
+async function preparePrejoinPreview() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    updatePrejoinPermissionState({ hasAudio: false, hasVideo: false, message: 'Media API not supported in this browser.' });
+    return null;
+  }
+
+  const tracks = [];
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    localStream = stream;
+    prejoinVideo.srcObject = stream;
+    updatePrejoinPermissionState({ hasAudio: true, hasVideo: true });
+    return stream;
+  } catch (combinedError) {
+    console.warn('Could not access both camera and microphone:', combinedError);
+  }
+
+  try {
+    const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    tracks.push(...audioStream.getAudioTracks());
+  } catch (audioError) {
+    console.warn('Could not access microphone:', audioError);
+  }
+
+  try {
+    const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+    tracks.push(...videoStream.getVideoTracks());
+  } catch (videoError) {
+    console.warn('Could not access camera:', videoError);
+  }
+
+  localStream = tracks.length ? new MediaStream(tracks) : null;
+  if (prejoinVideo) prejoinVideo.srcObject = localStream;
+  updatePrejoinPermissionState({
+    hasAudio: Boolean(localStream?.getAudioTracks().length),
+    hasVideo: Boolean(localStream?.getVideoTracks().length)
+  });
+
+  return localStream;
+}
+
+function updatePrejoinPermissionState({ hasAudio, hasVideo, message = '' }) {
+  setPermissionControl(prejoinMicBtn, micDevicePill, hasAudio, 'Microphone permission granted', 'Microphone permission missing');
+  setPermissionControl(prejoinCameraBtn, cameraDevicePill, hasVideo, 'Camera permission granted', 'Camera permission missing');
+  setPermissionControl(null, speakerDevicePill, true, 'Audio output ready', 'Audio output unavailable');
+
+  const allReady = hasAudio && hasVideo;
+  const partialReady = hasAudio || hasVideo;
+  prejoinStatus.classList.toggle('ready', allReady);
+  prejoinStatus.classList.toggle('partial', partialReady && !allReady);
+  prejoinStatus.classList.toggle('denied', !partialReady);
+  prejoinStatusIcon.className = allReady ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation';
+
+  if (allReady) {
+    prejoinStatusTitle.textContent = 'Câmera e microfone prontos';
+    prejoinStatusDesc.textContent = 'Suas permissões estão liberadas para entrar na sala.';
+  } else if (!hasVideo && hasAudio) {
+    prejoinStatusTitle.textContent = 'A câmera não foi encontrada';
+    prejoinStatusDesc.textContent = 'Você pode participar com áudio e chat enquanto verifica a câmera.';
+  } else if (hasVideo && !hasAudio) {
+    prejoinStatusTitle.textContent = 'Microfone sem permissão';
+    prejoinStatusDesc.textContent = 'Você pode participar com câmera e chat enquanto verifica o microfone.';
+  } else {
+    prejoinStatusTitle.textContent = 'Câmera e microfone sem permissão';
+    prejoinStatusDesc.textContent = message || 'Libere as permissões ou participe usando apenas o chat.';
+  }
+}
+
+function setPermissionControl(button, pill, isAllowed, allowedLabel, deniedLabel) {
+  [button, pill].filter(Boolean).forEach((element) => {
+    element.classList.toggle('allowed', isAllowed);
+    element.classList.toggle('denied', !isAllowed);
+  });
+
+  if (pill) {
+    const label = pill.querySelector('span');
+    if (label) label.textContent = isAllowed ? allowedLabel : deniedLabel;
+  }
+}
+
+async function togglePrejoinAudio() {
+  const audioTrack = localStream?.getAudioTracks()[0];
+  if (!audioTrack) {
+    await preparePrejoinPreview();
+    return;
+  }
+
+  audioTrack.enabled = !audioTrack.enabled;
+  prejoinMicBtn.classList.toggle('muted', !audioTrack.enabled);
+}
+
+async function togglePrejoinVideo() {
+  const videoTrack = localStream?.getVideoTracks()[0];
+  if (!videoTrack) {
+    await preparePrejoinPreview();
+    return;
+  }
+
+  videoTrack.enabled = !videoTrack.enabled;
+  prejoinVideo.classList.toggle('video-muted', !videoTrack.enabled);
+  prejoinCameraBtn.classList.toggle('muted', !videoTrack.enabled);
 }
 
 async function joinRoom() {
   const roomBase = roomInput.value.trim();
   username = usernameInput.value.trim() || `Guest ${userId.slice(-4)}`;
+  adminRecordingAllowed = adminRecordingAllowedInput.checked;
 
   if (!username) return alert('Please enter a username');
   if (!roomBase) return alert('Please enter a room name');
@@ -176,21 +310,26 @@ async function joinRoom() {
     userId,
     username,
     password: roomPassword.value.trim(),
-    limit: roomLimit.value
+    limit: roomLimit.value,
+    recordingAllowed: adminRecordingAllowed
   });
 
   const newUrl = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(roomId)}`;
   window.history.pushState({ path: newUrl }, '', newUrl);
 
   try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('Media API not supported');
+    if (!localStream) {
+      await preparePrejoinPreview();
     }
 
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    localVideo.srcObject = localStream;
-    updateLocalMediaState(true);
-    attachLocalMediaToPeers();
+    if (localStream) {
+      localVideo.srcObject = localStream;
+      updateLocalMediaState(true);
+      startSpeakingDetection(localStream, userId);
+      attachLocalMediaToPeers();
+    } else {
+      throw new Error('Media unavailable');
+    }
   } catch (err) {
     console.error('Error accessing media:', err);
     updateLocalMediaState(false);
@@ -228,9 +367,15 @@ function setupSocketListeners() {
 
   socket.on('admin-status', (data) => {
     isAdmin = data.isAdmin;
+    recordingAllowedForRoom = Boolean(data.recordingAllowed);
+    recordBtn.classList.toggle('hidden', !(isAdmin && recordingAllowedForRoom));
+
     if (isAdmin) {
       addSystemMessage('You are the Admin.');
       adminMuteAllBtn.classList.remove('hidden');
+      if (recordingAllowedForRoom) {
+        addSystemMessage('Admin recording is allowed for this room.');
+      }
     }
   });
 
@@ -385,6 +530,93 @@ async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
   }
 }
 
+
+function getSharedAudioContext() {
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    audioContext = new AudioContextClass();
+  }
+
+  if (audioContext.state === 'suspended') {
+    audioContext.resume().catch((err) => console.warn('Could not resume audio context:', err));
+  }
+
+  return audioContext;
+}
+
+function startSpeakingDetection(stream, participantId) {
+  const audioTrack = stream?.getAudioTracks?.()[0];
+  if (!audioTrack) {
+    updateSpeakingIndicator(participantId, false);
+    return;
+  }
+
+  stopSpeakingDetection(participantId);
+
+  const context = getSharedAudioContext();
+  if (!context) return;
+
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 512;
+  analyser.smoothingTimeConstant = 0.35;
+
+  const audioOnlyStream = new MediaStream([audioTrack]);
+  const source = context.createMediaStreamSource(audioOnlyStream);
+  const samples = new Uint8Array(analyser.fftSize);
+  let lastSpokeAt = 0;
+  let animationFrame = null;
+
+  source.connect(analyser);
+
+  const detect = () => {
+    if (!audioTrack.enabled || audioTrack.readyState !== 'live') {
+      updateSpeakingIndicator(participantId, false);
+      animationFrame = requestAnimationFrame(detect);
+      return;
+    }
+
+    analyser.getByteTimeDomainData(samples);
+    let sumSquares = 0;
+    samples.forEach((sample) => {
+      const centered = (sample - 128) / 128;
+      sumSquares += centered * centered;
+    });
+
+    const rms = Math.sqrt(sumSquares / samples.length);
+    const now = performance.now();
+    if (rms > SPEAKING_THRESHOLD) lastSpokeAt = now;
+
+    updateSpeakingIndicator(participantId, now - lastSpokeAt < SPEAKING_HOLD_MS);
+    animationFrame = requestAnimationFrame(detect);
+  };
+
+  speakingDetectors[participantId] = {
+    stop: () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      source.disconnect();
+      updateSpeakingIndicator(participantId, false);
+    }
+  };
+
+  detect();
+}
+
+function stopSpeakingDetection(participantId) {
+  if (!speakingDetectors[participantId]) return;
+  speakingDetectors[participantId].stop();
+  delete speakingDetectors[participantId];
+}
+
+function updateSpeakingIndicator(participantId, isSpeaking) {
+  const indicatorId = participantId === userId ? 'local-speaking-indicator' : `speaking-${participantId}`;
+  const indicator = document.getElementById(indicatorId);
+  if (!indicator) return;
+
+  indicator.classList.toggle('speaking', isSpeaking);
+  indicator.title = isSpeaking ? 'Speaking now' : 'Not speaking';
+}
+
 // UI Helpers for Dynamic Video
 function getDisplayName(participantId) {
   return participants[participantId]?.username || `User ${participantId.substr(0, 4)}`;
@@ -436,7 +668,13 @@ function addRemoteParticipant(remoteUserId) {
         `;
   }
 
-  overlay.innerHTML = `<span class="user-badge">${getDisplayName(remoteUserId)}</span>${adminControls}`;
+  overlay.innerHTML = `
+    <span class="user-badge">${getDisplayName(remoteUserId)}</span>
+    <div class="participant-indicators">
+      <div id="speaking-${remoteUserId}" class="audio-indicator speaking-indicator" title="Not speaking"><i class="fa-solid fa-microphone"></i></div>
+    </div>
+    ${adminControls}
+  `;
 
   videoContainer.appendChild(video);
   videoContainer.appendChild(placeholder);
@@ -451,6 +689,7 @@ function addRemoteVideo(stream, remoteUserId) {
   video.srcObject = stream;
   videoContainer.classList.remove('media-pending');
   remoteStreams[remoteUserId] = stream;
+  startSpeakingDetection(stream, remoteUserId);
 }
 
 function attachLocalMediaToPeers() {
@@ -480,6 +719,7 @@ function attachLocalMediaToPeers() {
 function removeRemoteVideo(remoteUserId) {
   const el = document.getElementById(`container-${remoteUserId}`);
   if (el) el.remove();
+  stopSpeakingDetection(remoteUserId);
   delete remoteStreams[remoteUserId];
 }
 
@@ -492,9 +732,11 @@ function toggleAudio() {
     if (audioTrack.enabled) {
       audioBtn.classList.remove('off');
       audioBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+      startSpeakingDetection(localStream, userId);
     } else {
       audioBtn.classList.add('off');
       audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+      updateSpeakingIndicator(userId, false);
     }
   }
 }
@@ -561,6 +803,10 @@ async function toggleScreenShare() {
 }
 
 function toggleRecording() {
+  if (!isAdmin || !recordingAllowedForRoom) {
+    return alert('Only the admin can record when admin recording is allowed for this room.');
+  }
+
   const remoteKeys = Object.keys(remoteStreams);
   if (remoteKeys.length === 0) return alert('No one to record.');
 
@@ -600,6 +846,7 @@ function toggleRecording() {
 }
 
 function leaveCall() {
+  Object.keys(speakingDetectors).forEach(stopSpeakingDetection);
   if (socket) socket.disconnect();
   // Close all peers
   for (const pid in peers) {
@@ -870,6 +1117,7 @@ function muteAudio() {
       audioTrack.enabled = false;
       audioBtn.classList.add('off');
       audioBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+      updateSpeakingIndicator(userId, false);
     }
   }
 }
