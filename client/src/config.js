@@ -12,11 +12,26 @@ export const defaultConfig = {
   analysis: {
     enabled: true,
   },
+  subtitles: {
+    enabled: false,
+    language: "pt-br",
+    openRouterKey: "",
+  },
 };
 
 export function loadConfig() {
   const saved = localStorage.getItem("ninja_config");
-  return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
+  if (!saved) return defaultConfig;
+
+  const parsed = JSON.parse(saved);
+  return {
+    ...defaultConfig,
+    ...parsed,
+    theme: { ...defaultConfig.theme, ...(parsed.theme || {}) },
+    branding: { ...defaultConfig.branding, ...(parsed.branding || {}) },
+    analysis: { ...defaultConfig.analysis, ...(parsed.analysis || {}) },
+    subtitles: { ...defaultConfig.subtitles, ...(parsed.subtitles || {}) },
+  };
 }
 
 export function saveConfig(config) {

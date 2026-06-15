@@ -6,12 +6,16 @@
     "build:client": "npm run build --prefix client",
     "postinstall": "npm run install:all && npm run build:client",
     "start": "node server/index.js",
-    "start:proxy": "cd browser-proxy && node index.js"
+    "start:proxy": "cd browser-proxy && node index.js",
+    "test:e2e": "playwright test"
   },
   "author": "suissa",
   "license": "Cogfulness Ethical License v1.0",
   "dependencies": {
     "@simplewebauthn/server": "^13.2.2",
     "body-parser": "^2.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

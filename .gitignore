@@ -4,3 +4,6 @@ dist
 .DS_Store
 package-lock.json
 */node_modules
+# Playwright artifacts
+test-results/
+playwright-report/
