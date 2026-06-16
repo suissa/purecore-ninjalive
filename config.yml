@@ -1,0 +1,23 @@
+llm:
+  provider: openrouter
+  model: openai/gpt-4o-mini
+  openai:
+    api_key: ${OPENAI_API_KEY}
+    base_url: https://api.openai.com/v1
+  openrouter:
+    api_key: ${OPENROUTER_API_KEY}
+    base_url: https://openrouter.ai/api/v1
+elevenlabs:
+  api_key: ${ELEVENLABS_API_KEY}
+  voice_id: ${ELEVENLABS_VOICE_ID}
+  model_id: eleven_multilingual_v2
+  stability: 0.45
+  similarity_boost: 0.85
+  style: 0
+  speed: 1
+stt:
+  provider: browser-webspeech
+  input_language: en-US
+privacy:
+  store_audio: false
+  store_transcripts: false
