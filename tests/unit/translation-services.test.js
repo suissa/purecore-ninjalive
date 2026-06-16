@@ -4,6 +4,7 @@ import { StreamingTranslationService } from '../../client/src/services/Streaming
 import { TranscriptStore } from '../../client/src/services/TranscriptStore.js';
 import { LatencyMetricsService } from '../../client/src/services/LatencyMetricsService.js';
 import { WebRTCAudioInjectionService } from '../../client/src/services/WebRTCAudioInjectionService.js';
+import { AudioPlaybackQueueService } from '../../client/src/services/AudioPlaybackQueueService.js';
 
 describe('PunctuationChunkerService', () => {
   it('detects terminal punctuation and does not duplicate text', () => {
@@ -35,6 +36,34 @@ describe('TranscriptStore', () => {
     const store = new TranscriptStore();
     store.add({ event: 'a' }); store.add({ event: 'b' });
     expect(store.all().map((event) => event.event)).toEqual(['a', 'b']);
+  });
+});
+
+
+
+describe('AudioPlaybackQueueService', () => {
+  it('plays queued audio in sequence and never overlaps', async () => {
+    const starts = [];
+    const fakeTrack = { kind: 'audio', id: 'generated' };
+    const audioContext = {
+      destination: {},
+      createMediaStreamDestination: () => ({ stream: { getAudioTracks: () => [fakeTrack] } }),
+      decodeAudioData: async () => ({}),
+      createBufferSource: () => ({
+        connect: () => {},
+        start() {
+          starts.push(Date.now());
+          setTimeout(() => this.onended?.(), 5);
+        },
+        stop() { this.onended?.(); }
+      })
+    };
+    const queue = new AudioPlaybackQueueService({ audioContext });
+    const first = queue.enqueue(new ArrayBuffer(1));
+    const second = queue.enqueue(new ArrayBuffer(1));
+    await Promise.all([first, second]);
+    expect(starts).toHaveLength(2);
+    expect(queue.playing).toBe(false);
   });
 });
 

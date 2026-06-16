@@ -58,6 +58,7 @@ const subtitlesSpeaker = document.getElementById('subtitles-speaker');
 const subtitlesText = document.getElementById('subtitles-text');
 const translationToggleBtn = document.getElementById('translation-toggle-btn');
 const voiceModeBtn = document.getElementById('voice-mode-btn');
+const clonedVoiceBtn = document.getElementById('cloned-voice-btn');
 const translationPanel = document.getElementById('translation-panel');
 const closeTranslationBtn = document.getElementById('close-translation');
 const pauseTranslationBtn = document.getElementById('pause-translation-btn');
@@ -88,6 +89,12 @@ const useClonedVoice = document.getElementById('use-cloned-voice');
 const injectWebrtcAudio = document.getElementById('inject-webrtc-audio');
 const playSpeakers = document.getElementById('play-speakers');
 const virtualMicMode = document.getElementById('virtual-mic-mode');
+const topbarRoomName = document.getElementById('topbar-room-name');
+const callDuration = document.getElementById('call-duration');
+const topbarLiveTranslation = document.getElementById('topbar-live-translation');
+const topbarLatencyStatus = document.getElementById('topbar-latency-status');
+const webrtcStatus = document.getElementById('webrtc-status');
+const localAudioModeBadge = document.getElementById('local-audio-mode-badge');
 
 // Controls
 const audioBtn = document.getElementById('audio-btn');
@@ -129,6 +136,9 @@ let remoteAudioCapture;
 let sttService;
 let liveTranslationEnabled = false;
 let aiVoiceEnabled = false;
+let callStartedAt = 0;
+let callTimer = null;
+const processedResponseSentences = new Set();
 
 // Admin
 let isAdmin = false;
@@ -219,12 +229,17 @@ function init() {
   saveConfigBtn.addEventListener('click', saveSettings);
   confSubtitlesLang.addEventListener('change', updateOpenRouterKeyVisibility);
   translationToggleBtn?.addEventListener('click', toggleTranslationPanel);
-  closeTranslationBtn?.addEventListener('click', toggleTranslationPanel);
+  closeTranslationBtn?.addEventListener('click', hideTranslationPanel);
+  clonedVoiceBtn?.addEventListener('click', toggleClonedVoice);
   voiceModeBtn?.addEventListener('click', toggleVoiceMode);
   pauseTranslationBtn?.addEventListener('click', toggleLiveTranslation);
   clearTranscriptBtn?.addEventListener('click', clearLocalTranscriptHistory);
   responsePtInput?.addEventListener('input', handleResponseInput);
-  sendResponseNowBtn?.addEventListener('click', () => responseChunker.flush().concat(responsePtInput.value.trim()).filter(Boolean).forEach(processPortugueseResponse));
+  sendResponseNowBtn?.addEventListener('click', () => {
+    const pending = responseChunker.flush();
+    const fallback = pending.length ? [] : [responsePtInput.value.trim()];
+    pending.concat(fallback).filter(Boolean).forEach(processPortugueseResponse);
+  });
   clearResponseQueueBtn?.addEventListener('click', () => audioPlaybackQueue?.clear());
   interruptAiVoiceBtn?.addEventListener('click', interruptAiVoice);
   document.querySelectorAll('.translation-tab').forEach((tab) => tab.addEventListener('click', () => selectTranslationTab(tab.dataset.translationTab)));
@@ -376,6 +391,8 @@ async function joinRoom() {
   // tile and can use chat even if media access is blocked or still pending.
   loginScreen.classList.add('hidden');
   callScreen.classList.remove('hidden');
+  startCallTimer();
+  updateMeetingChrome();
   addSystemMessage(`Joined room: ${roomId} as ${username}`);
 
   // Connect Socket
@@ -560,6 +577,8 @@ async function connectToNewUser(targetUserId, initiator, offerSdp = null) {
 
   const peer = new RTCPeerConnection(ICE_SERVERS);
   peers[targetUserId] = peer;
+  peer.onconnectionstatechange = updateWebRTCStatus;
+  peer.oniceconnectionstatechange = updateWebRTCStatus;
 
   // Add local tracks when camera/mic permission is available. Users can still
   // join, see participant tiles, and chat without granting media permissions.
@@ -757,6 +776,8 @@ function addRemoteParticipant(remoteUserId) {
 
   overlay.innerHTML = `
     <span class="user-badge">${getDisplayName(remoteUserId)}</span>
+    <span class="language-badge">EN → pt-BR</span>
+    <span class="audio-mode-badge">Real Mic</span>
     <div class="participant-indicators">
       <div id="speaking-${remoteUserId}" class="audio-indicator speaking-indicator" title="Not speaking"><i class="fa-solid fa-microphone"></i></div>
     </div>
@@ -1082,6 +1103,7 @@ function toggleRecording() {
 }
 
 function leaveCall() {
+  stopCallTimer();
   stopLiveSubtitles();
   Object.keys(speakingDetectors).forEach(stopSpeakingDetection);
   if (socket) socket.disconnect();
@@ -1373,6 +1395,44 @@ function muteAudio() {
   }
 }
 
+function startCallTimer() {
+  callStartedAt = Date.now();
+  stopCallTimer();
+  callTimer = setInterval(updateMeetingChrome, 1000);
+  updateMeetingChrome();
+}
+
+function stopCallTimer() {
+  if (callTimer) clearInterval(callTimer);
+  callTimer = null;
+}
+
+function updateMeetingChrome() {
+  if (topbarRoomName) topbarRoomName.textContent = roomId ? `Sala ${roomId}` : 'Sala';
+  if (callDuration && callStartedAt) {
+    const elapsed = Math.floor((Date.now() - callStartedAt) / 1000);
+    const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const seconds = String(elapsed % 60).padStart(2, '0');
+    callDuration.textContent = `${minutes}:${seconds}`;
+  }
+  if (topbarLiveTranslation) topbarLiveTranslation.textContent = liveTranslationEnabled ? 'Live Translation ON' : 'Live Translation OFF';
+  updateWebRTCStatus();
+}
+
+function updateWebRTCStatus() {
+  if (!webrtcStatus) return;
+  const states = Object.values(peers).map((peer) => peer.connectionState || peer.iceConnectionState).filter(Boolean);
+  const state = states.includes('connected') ? 'connected' : states[0] || (socket?.connected ? 'signaling ready' : 'disconnected');
+  webrtcStatus.textContent = `WebRTC: ${state}`;
+}
+
+function toggleClonedVoice() {
+  if (!useClonedVoice) return;
+  useClonedVoice.checked = !useClonedVoice.checked;
+  clonedVoiceBtn?.classList.toggle('active', useClonedVoice.checked);
+  addTranslationLog(useClonedVoice.checked ? 'cloned_voice_enabled' : 'cloned_voice_disabled');
+}
+
 // Start
 init();
 
@@ -1399,14 +1459,21 @@ function ensureAudioPlaybackQueue() {
 }
 
 function toggleTranslationPanel() {
-  translationPanel?.classList.toggle('hidden');
-  if (!translationPanel?.classList.contains('hidden')) toggleLiveTranslation(true);
+  if (translationPanel?.classList.contains('hidden')) {
+    translationPanel.classList.remove('hidden');
+  }
+  toggleLiveTranslation();
+}
+
+function hideTranslationPanel() {
+  translationPanel?.classList.add('hidden');
 }
 
 function toggleLiveTranslation(force) {
   liveTranslationEnabled = typeof force === 'boolean' ? force : !liveTranslationEnabled;
   translationLiveStatus.textContent = liveTranslationEnabled ? 'Live Translation ON' : 'Live Translation OFF';
   translationToggleBtn?.classList.toggle('active', liveTranslationEnabled);
+  if (topbarLiveTranslation) topbarLiveTranslation.textContent = liveTranslationEnabled ? 'Live Translation ON' : 'Live Translation OFF';
   pauseTranslationBtn.textContent = liveTranslationEnabled ? 'Pausar' : 'Retomar';
 }
 
@@ -1426,7 +1493,9 @@ function addTranslationLog(event, details = {}) {
 
 function updateLatency(sentenceId) {
   const metrics = latencyMetrics.get(sentenceId);
-  latencyStatus.textContent = `STT -- · LLM ${metrics.time_to_first_translated_token ?? '--'}ms · TTS ${metrics.time_to_first_audio ?? '--'}ms · Total ${metrics.total_sentence_latency ?? '--'}ms`;
+  const value = `STT -- · LLM ${metrics.time_to_first_translated_token ?? '--'}ms · TTS ${metrics.time_to_first_audio ?? '--'}ms · Total ${metrics.total_sentence_latency ?? '--'}ms`;
+  latencyStatus.textContent = value;
+  if (topbarLatencyStatus) topbarLatencyStatus.textContent = value;
 }
 
 async function handleRemoteSpeechText(text, isFinal) {
@@ -1458,6 +1527,8 @@ function handleResponseInput(event) {
 
 async function processPortugueseResponse(text) {
   if (!text?.trim()) return;
+  if (processedResponseSentences.has(text)) return;
+  processedResponseSentences.add(text);
   const sentenceId = `response-${Date.now()}`;
   latencyMetrics.start(sentenceId);
   responsePtSent.value = text;
@@ -1520,7 +1591,9 @@ async function toggleVoiceMode() {
 }
 
 function updateAudioModeUI() {
-  audioModeStatus.textContent = aiVoiceEnabled ? 'AI Voice' : 'Real Mic';
+  const label = aiVoiceEnabled ? 'AI Voice' : 'Real Mic';
+  audioModeStatus.textContent = label;
+  if (localAudioModeBadge) localAudioModeBadge.textContent = label;
   voiceModeBtn?.classList.toggle('active', aiVoiceEnabled);
 }
 
@@ -1535,6 +1608,7 @@ async function interruptAiVoice() {
 function clearLocalTranscriptHistory() {
   transcriptStore.clear();
   if (translationLogs) translationLogs.innerHTML = '';
+  processedResponseSentences.clear();
   if (remoteOriginalText) remoteOriginalText.value = '';
   if (remoteTranslationText) remoteTranslationText.value = '';
 }

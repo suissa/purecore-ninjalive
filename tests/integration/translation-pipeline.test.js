@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PunctuationChunkerService } from '../../client/src/services/PunctuationChunkerService.js';
 import { TranscriptStore } from '../../client/src/services/TranscriptStore.js';
+import { WebRTCAudioInjectionService } from '../../client/src/services/WebRTCAudioInjectionService.js';
 
 describe('translation voice pipeline', () => {
   it('sends Portuguese to TTS only after final punctuation and queues generated audio', async () => {
@@ -30,5 +31,17 @@ describe('translation voice pipeline', () => {
     store.add({ event: 'stt_final_received' });
     store.add({ event: 'llm_translation_chunk_received' });
     expect(store.all().map((event) => event.event)).toEqual(['stt_partial_received', 'stt_final_received', 'llm_translation_chunk_received']);
+  });
+
+  it('restores the original microphone track after AI voice injection', async () => {
+    const sender = { track: { kind: 'audio', id: 'current' }, replaceTrack: async (track) => { sender.track = track; } };
+    const injection = new WebRTCAudioInjectionService({
+      getPeers: () => ({ peer: { getSenders: () => [sender] } }),
+      getLocalStream: () => ({ getAudioTracks: () => [{ kind: 'audio', id: 'originalMicrophoneTrack' }] })
+    });
+    await injection.useGeneratedAudio({ kind: 'audio', id: 'generatedAudioTrack' });
+    expect(sender.track.id).toBe('generatedAudioTrack');
+    await injection.useRealMicrophone();
+    expect(sender.track.id).toBe('originalMicrophoneTrack');
   });
 });
