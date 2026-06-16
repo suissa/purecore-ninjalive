@@ -140,6 +140,10 @@ io.on('connection', (socket) => {
     socket.to(payload.roomId).emit('ice-candidate', payload);
   });
 
+  socket.on('screen-share-status', (payload) => {
+    socket.to(payload.roomId).emit('screen-share-status', payload);
+  });
+
   // Chat
   socket.on('chat-message', (payload) => {
     socket.to(payload.roomId).emit('chat-message', {

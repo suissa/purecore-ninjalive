@@ -59,12 +59,12 @@
 
             <div class="input-group">
               <i class="fa-solid fa-user"></i>
-              <input type="text" id="username-input" placeholder="Your username" autocomplete="name" />
+              <input type="text" id="username-input" placeholder="Your username" autocomplete="name" data-testid="username-input" />
             </div>
 
             <div class="input-group">
               <i class="fa-solid fa-hashtag"></i>
-              <input type="text" id="room-input" placeholder="Enter Room Name" />
+              <input type="text" id="room-input" placeholder="Enter Room Name" data-testid="room-input" />
             </div>
 
             <div class="prejoin-options-grid">
@@ -80,12 +80,12 @@
             </div>
 
             <label class="recording-permission-toggle">
-              <input type="checkbox" id="admin-recording-allowed" />
+              <input type="checkbox" id="admin-recording-allowed" data-testid="admin-recording-allowed" />
               <span class="toggle-ui"><i class="fa-solid fa-record-vinyl"></i></span>
               <span>Permitir gravação pelo Admin</span>
             </label>
 
-            <button id="join-btn" class="primary-btn prejoin-join-btn">
+            <button id="join-btn" class="primary-btn prejoin-join-btn" data-testid="join-btn">
               Pedir para participar <i class="fa-solid fa-arrow-right"></i>
             </button>
           </aside>
@@ -104,7 +104,7 @@
         <div class="main-content">
           <div class="video-grid">
             <!-- Local Video -->
-            <div class="video-container local">
+            <div id="local-container" class="video-container local" data-testid="local-participant-tile">
               <video id="local-video" autoplay muted playsinline></video>
               <div class="video-overlay">
                 <span id="local-user-badge" class="user-badge">You</span>
@@ -124,11 +124,11 @@
           <button id="video-btn" class="control-btn active" title="Start/Stop Video">
             <i class="fa-solid fa-video"></i>
           </button>
-          <button id="screen-btn" class="control-btn" title="Share Screen">
+          <button id="screen-btn" class="control-btn" title="Share Screen" data-testid="screen-share-btn">
             <i class="fa-solid fa-desktop"></i>
           </button>
           <div class="divider"></div>
-          <button id="record-btn" class="control-btn hidden" title="Record">
+          <button id="record-btn" class="control-btn hidden" title="Record" data-testid="record-btn">
             <i class="fa-solid fa-record-vinyl"></i>
           </button>
           <button id="chat-toggle-btn" class="control-btn" title="Chat">
@@ -157,6 +157,11 @@
 
         <!-- Chat Notification Toast -->
         <div id="notification-area"></div>
+        <div id="subtitles-overlay" class="subtitles-overlay hidden" aria-live="polite">
+          <span id="subtitles-speaker">Live Subtitles</span>
+          <p id="subtitles-text"></p>
+        </div>
+
 
         <!-- Side Chat Panel -->
         <div id="chat-panel" class="glass-panel hidden">
@@ -229,6 +234,26 @@
                             <option value="'Serif', serif">Serif (Classic)</option>
                             <option value="'Courier New', monospace">Monospace (Tech)</option>
                         </select>
+                    </div>
+
+                    <div class="settings-divider"></div>
+                    <div class="form-group switch-form-group">
+                        <label for="conf-live-subtitles">Live Subtitles</label>
+                        <label class="switch-toggle">
+                            <input type="checkbox" id="conf-live-subtitles">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>Subtitles Idiom</label>
+                        <select id="conf-subtitles-lang">
+                            <option value="pt-br">pt-br</option>
+                            <option value="en">en</option>
+                        </select>
+                    </div>
+                    <div id="openrouter-key-group" class="form-group hidden">
+                        <label>OpenRouter API Key</label>
+                        <input type="password" id="conf-openrouter-key" placeholder="sk-or-...">
                     </div>
                     <button id="save-config-btn" class="primary-btn" style="width: 100%; margin-top: 1rem;">Apply & Save</button>
                 </div>

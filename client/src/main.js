@@ -43,6 +43,9 @@ const attachImageBtn = document.getElementById('attach-image-btn');
 const sendBtn = document.getElementById('send-btn');
 const chatMessages = document.getElementById('chat-messages');
 const unreadBadge = document.getElementById('unread-badge');
+const subtitlesOverlay = document.getElementById('subtitles-overlay');
+const subtitlesSpeaker = document.getElementById('subtitles-speaker');
+const subtitlesText = document.getElementById('subtitles-text');
 
 // Controls
 const audioBtn = document.getElementById('audio-btn');
@@ -66,6 +69,7 @@ let recordedChunks = [];
 let isChatOpen = false;
 let unreadCount = 0;
 let adminRecordingAllowed = false;
+let sharedScreenUserId = null;
 let audioContext;
 const speakingDetectors = {};
 const SPEAKING_THRESHOLD = 0.035;
@@ -79,6 +83,8 @@ const adminMuteAllBtn = document.getElementById('admin-mute-all');
 // Transcript & Analysis
 let recognition;
 let transcript = "";
+let liveSubtitleRecognition;
+let liveSubtitleResetTimer;
 const downloadTranscriptBtn = document.getElementById('download-transcript');
 const analysisPanel = document.getElementById('analysis-panel');
 const analysisBtn = document.getElementById('analysis-btn');
@@ -97,6 +103,10 @@ const confPrimary = document.getElementById('conf-primary');
 const confSecondary = document.getElementById('conf-secondary');
 const confBg = document.getElementById('conf-bg');
 const confFont = document.getElementById('conf-font');
+const confLiveSubtitles = document.getElementById('conf-live-subtitles');
+const confSubtitlesLang = document.getElementById('conf-subtitles-lang');
+const confOpenRouterKey = document.getElementById('conf-openrouter-key');
+const openRouterKeyGroup = document.getElementById('openrouter-key-group');
 
 let appConfig = loadConfig();
 
@@ -146,19 +156,96 @@ function init() {
 
   // Transcript Handlers
   downloadTranscriptBtn.addEventListener('click', downloadTranscript);
-  initTranscription();
 
   // Analysis & Settings Handlers
   analysisBtn.addEventListener('click', toggleAnalysis);
   settingsBtn.addEventListener('click', openSettings);
   closeSettingsBtn.addEventListener('click', closeSettings);
   saveConfigBtn.addEventListener('click', saveSettings);
+  confSubtitlesLang.addEventListener('change', updateOpenRouterKeyVisibility);
 
   // Check URL for Room ID
   const urlParams = new URLSearchParams(window.location.search);
   const urlRoom = urlParams.get('room');
   if (urlRoom) {
     roomInput.value = urlRoom;
+  }
+
+  preparePrejoinPreview();
+}
+
+
+function updatePrejoinName() {
+  const fallbackName = 'Your username';
+  if (prejoinName) prejoinName.textContent = usernameInput.value.trim() || fallbackName;
+}
+
+async function preparePrejoinPreview() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    updatePrejoinPermissionState({ hasAudio: false, hasVideo: false, message: 'Media API not supported in this browser.' });
+    return null;
+  }
+
+  const tracks = [];
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    localStream = stream;
+    prejoinVideo.srcObject = stream;
+    updatePrejoinPermissionState({ hasAudio: true, hasVideo: true });
+    return stream;
+  } catch (combinedError) {
+    console.warn('Could not access both camera and microphone:', combinedError);
+  }
+
+  try {
+    const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    tracks.push(...audioStream.getAudioTracks());
+  } catch (audioError) {
+    console.warn('Could not access microphone:', audioError);
+  }
+
+  try {
+    const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+    tracks.push(...videoStream.getVideoTracks());
+  } catch (videoError) {
+    console.warn('Could not access camera:', videoError);
+  }
+
+  localStream = tracks.length ? new MediaStream(tracks) : null;
+  if (prejoinVideo) prejoinVideo.srcObject = localStream;
+  updatePrejoinPermissionState({
+    hasAudio: Boolean(localStream?.getAudioTracks().length),
+    hasVideo: Boolean(localStream?.getVideoTracks().length)
+  });
+
+  return localStream;
+}
+
+function updatePrejoinPermissionState({ hasAudio, hasVideo, message = '' }) {
+  setPermissionControl(prejoinMicBtn, micDevicePill, hasAudio, 'Microphone permission granted', 'Microphone permission missing');
+  setPermissionControl(prejoinCameraBtn, cameraDevicePill, hasVideo, 'Camera permission granted', 'Camera permission missing');
+  setPermissionControl(null, speakerDevicePill, true, 'Audio output ready', 'Audio output unavailable');
+
+  const allReady = hasAudio && hasVideo;
+  const partialReady = hasAudio || hasVideo;
+  prejoinStatus.classList.toggle('ready', allReady);
+  prejoinStatus.classList.toggle('partial', partialReady && !allReady);
+  prejoinStatus.classList.toggle('denied', !partialReady);
+  prejoinStatusIcon.className = allReady ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-exclamation';
+
+  if (allReady) {
+    prejoinStatusTitle.textContent = 'Câmera e microfone prontos';
+    prejoinStatusDesc.textContent = 'Suas permissões estão liberadas para entrar na sala.';
+  } else if (!hasVideo && hasAudio) {
+    prejoinStatusTitle.textContent = 'A câmera não foi encontrada';
+    prejoinStatusDesc.textContent = 'Você pode participar com áudio e chat enquanto verifica a câmera.';
+  } else if (hasVideo && !hasAudio) {
+    prejoinStatusTitle.textContent = 'Microfone sem permissão';
+    prejoinStatusDesc.textContent = 'Você pode participar com câmera e chat enquanto verifica o microfone.';
+  } else {
+    prejoinStatusTitle.textContent = 'Câmera e microfone sem permissão';
+    prejoinStatusDesc.textContent = message || 'Libere as permissões ou participe usando apenas o chat.';
   }
 
   preparePrejoinPreview();
@@ -274,6 +361,41 @@ async function togglePrejoinVideo() {
   prejoinCameraBtn.classList.toggle('muted', !videoTrack.enabled);
 }
 
+function setPermissionControl(button, pill, isAllowed, allowedLabel, deniedLabel) {
+  [button, pill].filter(Boolean).forEach((element) => {
+    element.classList.toggle('allowed', isAllowed);
+    element.classList.toggle('denied', !isAllowed);
+  });
+
+  if (pill) {
+    const label = pill.querySelector('span');
+    if (label) label.textContent = isAllowed ? allowedLabel : deniedLabel;
+  }
+}
+
+async function togglePrejoinAudio() {
+  const audioTrack = localStream?.getAudioTracks()[0];
+  if (!audioTrack) {
+    await preparePrejoinPreview();
+    return;
+  }
+
+  audioTrack.enabled = !audioTrack.enabled;
+  prejoinMicBtn.classList.toggle('muted', !audioTrack.enabled);
+}
+
+async function togglePrejoinVideo() {
+  const videoTrack = localStream?.getVideoTracks()[0];
+  if (!videoTrack) {
+    await preparePrejoinPreview();
+    return;
+  }
+
+  videoTrack.enabled = !videoTrack.enabled;
+  prejoinVideo.classList.toggle('video-muted', !videoTrack.enabled);
+  prejoinCameraBtn.classList.toggle('muted', !videoTrack.enabled);
+}
+
 async function joinRoom() {
   const roomBase = roomInput.value.trim();
   username = usernameInput.value.trim() || `Guest ${userId.slice(-4)}`;
@@ -326,6 +448,7 @@ async function joinRoom() {
       localVideo.srcObject = localStream;
       updateLocalMediaState(true);
       startSpeakingDetection(localStream, userId);
+      if (appConfig.subtitles.enabled) startLiveSubtitles();
       attachLocalMediaToPeers();
     } else {
       throw new Error('Media unavailable');
@@ -377,6 +500,10 @@ function setupSocketListeners() {
         addSystemMessage('Admin recording is allowed for this room.');
       }
     }
+  });
+
+  socket.on('screen-share-status', ({ userId: sharingUserId, isSharing }) => {
+    setSharedScreenUser(isSharing ? sharingUserId : null);
   });
 
   socket.on('admin-mute-command', () => {
@@ -626,46 +753,9 @@ function updateLocalParticipant(displayName) {
   const badge = document.getElementById('local-user-badge');
   if (badge) badge.textContent = `${displayName} (You)`;
   const localContainer = document.querySelector('.video-container.local');
-  if (localContainer) localContainer.classList.add('media-pending');
-}
-
-function updateLocalMediaState(hasMedia) {
-  const localContainer = document.querySelector('.video-container.local');
-  if (!localContainer) return;
-  localContainer.classList.toggle('media-pending', !hasMedia);
-  if (!hasMedia) {
-    localVideo.srcObject = null;
-  }
-}
-
-function addRemoteParticipant(remoteUserId) {
-  let videoContainer = document.getElementById(`container-${remoteUserId}`);
-  if (videoContainer) return videoContainer;
-
-  videoContainer = document.createElement('div');
-  videoContainer.id = `container-${remoteUserId}`;
-  videoContainer.className = 'video-container remote media-pending';
-
-  const video = document.createElement('video');
-  video.id = `video-${remoteUserId}`;
-  video.autoplay = true;
-  video.playsInline = true;
-
-  const placeholder = document.createElement('div');
-  placeholder.className = 'video-placeholder';
-  placeholder.innerHTML = `<i class="fa-solid fa-user-ninja"></i><span>Waiting for media</span>`;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'video-overlay';
-
-  let adminControls = '';
-  if (isAdmin) {
-    adminControls = `
-          <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
-             <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
-             <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
-          </div>
-        `;
+  if (localContainer) {
+    localContainer.classList.add('media-pending');
+    localContainer.dataset.participantId = userId;
   }
 
   overlay.innerHTML = `
@@ -716,11 +806,243 @@ function attachLocalMediaToPeers() {
   });
 }
 
+function updateLocalMediaState(hasMedia) {
+  const localContainer = document.querySelector('.video-container.local');
+  if (!localContainer) return;
+  localContainer.classList.toggle('media-pending', !hasMedia);
+  if (!hasMedia) {
+    localVideo.srcObject = null;
+  }
+}
+
+function addRemoteParticipant(remoteUserId) {
+  let videoContainer = document.getElementById(`container-${remoteUserId}`);
+  if (videoContainer) return videoContainer;
+
+  videoContainer = document.createElement('div');
+  videoContainer.id = `container-${remoteUserId}`;
+  videoContainer.className = 'video-container remote media-pending';
+  videoContainer.dataset.participantId = remoteUserId;
+  videoContainer.dataset.testid = 'remote-participant-tile';
+
+  const video = document.createElement('video');
+  video.id = `video-${remoteUserId}`;
+  video.autoplay = true;
+  video.playsInline = true;
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'video-placeholder';
+  placeholder.innerHTML = `<i class="fa-solid fa-user-ninja"></i><span>Waiting for media</span>`;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'video-overlay';
+
+  let adminControls = '';
+  if (isAdmin) {
+    adminControls = `
+          <div class="admin-controls" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
+             <button class="icon-btn" onclick="window.emitMute('${remoteUserId}')" title="Mute User" style="background:rgba(0,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-microphone-slash"></i></button>
+             <button class="icon-btn" onclick="window.emitKick('${remoteUserId}')" title="Kick User" style="background:rgba(255,0,0,0.5); color:white; padding:5px; border-radius:50%;"><i class="fa-solid fa-user-xmark"></i></button>
+          </div>
+        `;
+  }
+
+  overlay.innerHTML = `
+    <span class="user-badge">${getDisplayName(remoteUserId)}</span>
+    <div class="participant-indicators">
+      <div id="speaking-${remoteUserId}" class="audio-indicator speaking-indicator" title="Not speaking"><i class="fa-solid fa-microphone"></i></div>
+    </div>
+    ${adminControls}
+  `;
+
+  videoContainer.appendChild(video);
+  videoContainer.appendChild(placeholder);
+  videoContainer.appendChild(overlay);
+  videoGrid.appendChild(videoContainer);
+  updateVideoLayout();
+  return videoContainer;
+}
+
+function addRemoteVideo(stream, remoteUserId) {
+  const videoContainer = addRemoteParticipant(remoteUserId);
+  const video = videoContainer.querySelector('video');
+  video.srcObject = stream;
+  videoContainer.classList.remove('media-pending');
+  remoteStreams[remoteUserId] = stream;
+  startSpeakingDetection(stream, remoteUserId);
+  updateVideoLayout();
+}
+
+function attachLocalMediaToPeers() {
+  if (!localStream) return;
+
+  Object.entries(peers).forEach(async ([peerId, peer]) => {
+    localStream.getTracks().forEach((track) => {
+      const hasSender = peer.getSenders().some((sender) => sender.track?.kind === track.kind);
+      if (!hasSender) peer.addTrack(track, localStream);
+    });
+
+    try {
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      socket.emit('offer', {
+        roomId,
+        target: peerId,
+        caller: userId,
+        sdp: offer
+      });
+    } catch (err) {
+      console.error('Error renegotiating media with peer:', err);
+    }
+  });
+}
+
 function removeRemoteVideo(remoteUserId) {
   const el = document.getElementById(`container-${remoteUserId}`);
   if (el) el.remove();
   stopSpeakingDetection(remoteUserId);
   delete remoteStreams[remoteUserId];
+  if (sharedScreenUserId === remoteUserId) sharedScreenUserId = null;
+  updateVideoLayout();
+}
+
+
+function getParticipantTile(participantId) {
+  if (participantId === userId) return document.getElementById('local-container');
+  return document.getElementById(`container-${participantId}`);
+}
+
+function setSharedScreenUser(participantId) {
+  sharedScreenUserId = participantId;
+  updateVideoLayout();
+}
+
+function updateVideoLayout() {
+  const tiles = [...videoGrid.querySelectorAll('.video-container')];
+  tiles.forEach((tile) => {
+    tile.classList.remove('screen-share-featured', 'rail-bottom', 'rail-top', 'rail-right', 'rail-left', 'compact-tile');
+    tile.style.removeProperty('--rail-index');
+  });
+
+  const featuredTile = sharedScreenUserId ? getParticipantTile(sharedScreenUserId) : null;
+  videoGrid.classList.toggle('screen-share-layout', Boolean(featuredTile));
+
+  if (!featuredTile) {
+    videoGrid.classList.toggle('dense-grid', tiles.length > 6);
+    return;
+  }
+
+  featuredTile.classList.add('screen-share-featured');
+  const railTiles = tiles.filter((tile) => tile !== featuredTile);
+  const bottomCapacity = 6;
+  const topCapacity = 6;
+  const rightCapacity = 4;
+  const leftCapacity = 4;
+
+  railTiles.forEach((tile, index) => {
+    let railClass = 'rail-left';
+    let railIndex = index - bottomCapacity - topCapacity - rightCapacity;
+
+    if (index < bottomCapacity) {
+      railClass = 'rail-bottom';
+      railIndex = index;
+    } else if (index < bottomCapacity + topCapacity) {
+      railClass = 'rail-top';
+      railIndex = index - bottomCapacity;
+    } else if (index < bottomCapacity + topCapacity + rightCapacity) {
+      railClass = 'rail-right';
+      railIndex = index - bottomCapacity - topCapacity;
+    }
+
+    tile.classList.add(railClass);
+    if (railTiles.length > bottomCapacity + topCapacity + rightCapacity + leftCapacity) {
+      tile.classList.add('compact-tile');
+    }
+    tile.style.setProperty('--rail-index', railIndex);
+  });
+}
+
+function updateOpenRouterKeyVisibility() {
+  openRouterKeyGroup.classList.toggle('hidden', confSubtitlesLang.value !== 'en');
+}
+
+function getSpeechRecognitionClass() {
+  return window.SpeechRecognition || window.webkitSpeechRecognition;
+}
+
+function getSubtitleRecognitionLanguage() {
+  return appConfig.subtitles.language === 'en' ? 'en-US' : 'pt-BR';
+}
+
+function startLiveSubtitles() {
+  const SpeechRecognitionClass = getSpeechRecognitionClass();
+  if (!SpeechRecognitionClass) {
+    addSystemMessage('Live Subtitles are not supported in this browser.');
+    return;
+  }
+
+  stopLiveSubtitles();
+  liveSubtitleRecognition = new SpeechRecognitionClass();
+  liveSubtitleRecognition.continuous = true;
+  liveSubtitleRecognition.interimResults = true;
+  liveSubtitleRecognition.lang = getSubtitleRecognitionLanguage();
+
+  liveSubtitleRecognition.onresult = (event) => {
+    let subtitle = '';
+    let finalSubtitle = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const piece = event.results[i][0].transcript;
+      subtitle += piece;
+      if (event.results[i].isFinal) finalSubtitle += piece;
+    }
+
+    showLiveSubtitle(subtitle.trim());
+
+    if (finalSubtitle.trim()) {
+      const timestamp = new Date().toLocaleTimeString();
+      transcript += `[${timestamp}] Live Subtitles: ${finalSubtitle.trim()}\n`;
+      localStorage.setItem(`transcript-${roomId}`, transcript);
+    }
+  };
+
+  liveSubtitleRecognition.onerror = (event) => {
+    console.warn('Live subtitles recognition error:', event.error);
+  };
+
+  liveSubtitleRecognition.onend = () => {
+    if (appConfig.subtitles.enabled && localStream) {
+      try { liveSubtitleRecognition.start(); } catch (e) { }
+    }
+  };
+
+  try {
+    liveSubtitleRecognition.start();
+    subtitlesOverlay.classList.remove('hidden');
+  } catch (err) {
+    console.warn('Could not start live subtitles:', err);
+  }
+}
+
+function stopLiveSubtitles() {
+  if (liveSubtitleResetTimer) clearTimeout(liveSubtitleResetTimer);
+  if (liveSubtitleRecognition) {
+    liveSubtitleRecognition.onend = null;
+    try { liveSubtitleRecognition.stop(); } catch (e) { }
+  }
+  liveSubtitleRecognition = null;
+  subtitlesOverlay.classList.add('hidden');
+  subtitlesText.textContent = '';
+}
+
+function showLiveSubtitle(text) {
+  if (!text) return;
+  subtitlesSpeaker.textContent = appConfig.subtitles.language === 'en' ? 'Live Subtitles (EN)' : 'Legendas ao vivo (PT-BR)';
+  subtitlesText.textContent = text;
+  subtitlesOverlay.classList.remove('hidden');
+  if (liveSubtitleResetTimer) clearTimeout(liveSubtitleResetTimer);
+  liveSubtitleResetTimer = setTimeout(() => {
+    subtitlesText.textContent = '';
+  }, 5000);
 }
 
 // Controls
@@ -775,6 +1097,8 @@ async function toggleScreenShare() {
 
     screenBtn.classList.remove('active');
     isScreenSharing = false;
+    if (socket) socket.emit('screen-share-status', { roomId, userId, isSharing: false });
+    setSharedScreenUser(null);
   } else {
     // Start
     try {
@@ -795,6 +1119,8 @@ async function toggleScreenShare() {
 
       screenBtn.classList.add('active');
       isScreenSharing = true;
+      if (socket) socket.emit('screen-share-status', { roomId, userId, isSharing: true });
+      setSharedScreenUser(userId);
 
     } catch (err) {
       console.error('Error sharing screen:', err);
@@ -846,6 +1172,7 @@ function toggleRecording() {
 }
 
 function leaveCall() {
+  stopLiveSubtitles();
   Object.keys(speakingDetectors).forEach(stopSpeakingDetection);
   if (socket) socket.disconnect();
   // Close all peers
@@ -1073,6 +1400,10 @@ function openSettings() {
   confSecondary.value = appConfig.theme.secondaryColor;
   confBg.value = appConfig.theme.backgroundColor;
   confFont.value = appConfig.theme.fontFamily;
+  confLiveSubtitles.checked = Boolean(appConfig.subtitles.enabled);
+  confSubtitlesLang.value = appConfig.subtitles.language || 'pt-br';
+  confOpenRouterKey.value = appConfig.subtitles.openRouterKey || '';
+  updateOpenRouterKeyVisibility();
 
   settingsModal.classList.remove('hidden');
 }
@@ -1093,11 +1424,21 @@ function saveSettings() {
       title: confTitle.value,
       logoUrl: confLogo.value
     },
-    analysis: { enabled: true }
+    analysis: { enabled: true },
+    subtitles: {
+      enabled: confLiveSubtitles.checked,
+      language: confSubtitlesLang.value,
+      openRouterKey: confOpenRouterKey.value.trim()
+    }
   };
 
   appConfig = newConfig;
   saveConfig(newConfig);
+  if (newConfig.subtitles.enabled) {
+    startLiveSubtitles();
+  } else {
+    stopLiveSubtitles();
+  }
   closeSettings();
   alert('Settings saved!');
 }
